@@ -1,0 +1,20 @@
+[Unit]
+Description=Backtest Control Server
+After=network.target
+
+[Service]
+Type=simple
+User=cloudibkr
+Group=cloudibkr
+WorkingDirectory=/home/cloudibkr/Documents/zac_qc
+Environment="PATH=/home/cloudibkr/Documents/zac_qc/env/bin"
+ExecStart=/home/cloudibkr/Documents/zac_qc/env/bin/python /home/cloudibkr/Documents/zac_qc/start_server.py
+Restart=always
+RestartSec=10
+
+# Logging
+StandardOutput=append:/home/cloudibkr/Documents/zac_qc/logs/systemd-server.log
+StandardError=append:/home/cloudibkr/Documents/zac_qc/logs/systemd-server-error.log
+
+[Install]
+WantedBy=multi-user.target
