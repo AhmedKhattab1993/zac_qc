@@ -14,16 +14,20 @@ calendar_logger = logging.getLogger('trading_calendar')
 
 class USEquityTradingCalendar:
     """
-    US Equity Trading Calendar that uses pandas_market_calendars to determine valid trading days.
-    Excludes weekends, official market holidays, and handles early close days.
+    Trading calendar for US equities backed by `pandas_market_calendars`.
+
+    Provides helpers for validating trading days, early closes, and standard
+    market hours while excluding weekends and holidays.
     """
     
     def __init__(self, polygon_api_key: str = None):
         """
-        Initialize the trading calendar
-        
-        Args:
-            polygon_api_key: Not used anymore, kept for backward compatibility
+        Construct the trading calendar.
+
+        Parameters
+        ----------
+        polygon_api_key : str, optional
+            Retained for backward compatibility; unused.
         """
         # Initialize NYSE calendar from pandas_market_calendars
         self.calendar = mcal.get_calendar('NYSE')
@@ -31,13 +35,17 @@ class USEquityTradingCalendar:
     
     def is_trading_day(self, check_date: date) -> bool:
         """
-        Check if a specific date is a trading day for US equities
-        
-        Args:
-            check_date: Date to check
-            
-        Returns:
-            True if it's a trading day, False otherwise
+        Determine whether the supplied date is a valid trading session.
+
+        Parameters
+        ----------
+        check_date : datetime.date
+            Date to evaluate.
+
+        Returns
+        -------
+        bool
+            True when markets are open, otherwise False.
         """
         # Convert date to pandas timestamp with UTC timezone
         pd_date = pd.Timestamp(check_date, tz='UTC')
@@ -52,13 +60,17 @@ class USEquityTradingCalendar:
     
     def is_early_close_day(self, check_date: date) -> bool:
         """
-        Check if a specific date is an early close day (market closes at 1:00 PM ET)
-        
-        Args:
-            check_date: Date to check
-            
-        Returns:
-            True if it's an early close day, False otherwise
+        Check whether the market closes early on the provided date.
+
+        Parameters
+        ----------
+        check_date : datetime.date
+            Date to evaluate.
+
+        Returns
+        -------
+        bool
+            True when the market closes at 1:00 PM ET.
         """
         # Convert date to pandas timestamp
         pd_date = pd.Timestamp(check_date)
@@ -75,13 +87,17 @@ class USEquityTradingCalendar:
     
     def get_market_hours(self, check_date: date) -> Optional[Tuple[datetime, datetime]]:
         """
-        Get market open and close times for a specific date
-        
-        Args:
-            check_date: Date to check
-            
-        Returns:
-            Tuple of (open_time, close_time) in UTC, or None if market is closed
+        Retrieve the open and close timestamps for a trading day.
+
+        Parameters
+        ----------
+        check_date : datetime.date
+            Date to evaluate.
+
+        Returns
+        -------
+        tuple[datetime.datetime, datetime.datetime] or None
+            Opening and closing times in UTC, or None if markets are closed.
         """
         pd_date = pd.Timestamp(check_date)
         schedule = self.calendar.schedule(start_date=pd_date, end_date=pd_date)
@@ -95,14 +111,19 @@ class USEquityTradingCalendar:
     
     def get_trading_days(self, start_date: date, end_date: date) -> List[date]:
         """
-        Get all trading days between start_date and end_date (inclusive)
-        
-        Args:
-            start_date: Start date
-            end_date: End date
-            
-        Returns:
-            List of date objects representing trading days
+        List all trading days within an inclusive date range.
+
+        Parameters
+        ----------
+        start_date : datetime.date
+            Beginning of the range.
+        end_date : datetime.date
+            End of the range.
+
+        Returns
+        -------
+        list[datetime.date]
+            Trading dates within the range.
         """
         # Convert to pandas timestamps
         start = pd.Timestamp(start_date)
@@ -116,26 +137,35 @@ class USEquityTradingCalendar:
     
     def get_trading_days_count(self, start_date: date, end_date: date) -> int:
         """
-        Get count of trading days in date range
-        
-        Args:
-            start_date: Start date
-            end_date: End date
-            
-        Returns:
-            Number of trading days
+        Count the number of trading sessions within a date range.
+
+        Parameters
+        ----------
+        start_date : datetime.date
+            Beginning of the range.
+        end_date : datetime.date
+            End of the range.
+
+        Returns
+        -------
+        int
+            Number of trading days.
         """
         return len(self.get_trading_days(start_date, end_date))
     
     def get_next_trading_day(self, from_date: date) -> date:
         """
-        Get the next trading day after the given date
-        
-        Args:
-            from_date: Date to start from
-            
-        Returns:
-            Next trading day
+        Find the next trading day after the specified date.
+
+        Parameters
+        ----------
+        from_date : datetime.date
+            Reference date.
+
+        Returns
+        -------
+        datetime.date
+            Next valid trading day.
         """
         # Get valid days for the next month to ensure we find the next trading day
         start = pd.Timestamp(from_date) + pd.Timedelta(days=1)
@@ -153,13 +183,17 @@ class USEquityTradingCalendar:
     
     def get_previous_trading_day(self, from_date: date) -> date:
         """
-        Get the previous trading day before the given date
-        
-        Args:
-            from_date: Date to start from
-            
-        Returns:
-            Previous trading day
+        Find the most recent trading day prior to the supplied date.
+
+        Parameters
+        ----------
+        from_date : datetime.date
+            Reference date.
+
+        Returns
+        -------
+        datetime.date
+            Previous valid trading day.
         """
         # Get valid days for the previous month to ensure we find the previous trading day
         end = pd.Timestamp(from_date) - pd.Timedelta(days=1)
@@ -177,13 +211,17 @@ class USEquityTradingCalendar:
     
     def get_market_holidays(self, year: int) -> List[date]:
         """
-        Get all market holidays for a specific year (excludes weekends)
-        
-        Args:
-            year: Year to get holidays for
-            
-        Returns:
-            List of date objects representing market holidays
+        Enumerate US equity market holidays for a calendar year.
+
+        Parameters
+        ----------
+        year : int
+            Year for which to compute holidays.
+
+        Returns
+        -------
+        list[datetime.date]
+            Dates when the market is closed (excluding weekends).
         """
         # pandas_market_calendars doesn't directly expose holidays, 
         # but we can infer them by finding weekdays that aren't trading days
@@ -284,7 +322,13 @@ class USEquityTradingCalendar:
 
 
 def test_trading_calendar():
-    """Test function to validate trading calendar functionality"""
+    """
+    Exercise calendar helper methods and print example output.
+
+    Returns
+    -------
+    None
+    """
     calendar = USEquityTradingCalendar()
     
     # Test some known dates

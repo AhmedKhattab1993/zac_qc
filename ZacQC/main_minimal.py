@@ -3,9 +3,18 @@ from AlgorithmImports import *
 from config.parameters import TradingParameters
 
 class MinimalTradingAlgorithm(QCAlgorithm):
-    """Minimal algorithm to test initialization"""
+    """
+    Lightweight algorithm used for smoke testing ZacQC dependencies.
+    """
     
     def Initialize(self):
+        """
+        Configure a minimal environment with a single equity.
+
+        Returns
+        -------
+        None
+        """
         # Basic setup only
         self.SetStartDate(2024, 1, 3)
         self.SetCash(100000)
@@ -17,5 +26,16 @@ class MinimalTradingAlgorithm(QCAlgorithm):
         self.Log("Minimal algorithm initialized successfully")
     
     def OnData(self, data):
-        """Minimal data processing"""
+        """
+        No-op data handler used for interface validation.
+
+        Parameters
+        ----------
+        data : Slice
+            QuantConnect data slice.
+
+        Returns
+        -------
+        None
+        """
         pass

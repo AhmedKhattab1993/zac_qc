@@ -4,11 +4,23 @@ from management.rally_detector import RallyDetector
 
 class ConditionsChecker:
     """
-    Basic trading condition logic for Reference behavior
-    Simplified from enhanced ZacQC implementation
+    Evaluate ZacQC reference trading conditions and rally logic.
+
+    Parameters
+    ----------
+    algorithm : Algorithm
+        Parent QCAlgorithm instance.
     """
     
     def __init__(self, algorithm):
+        """
+        Capture context objects required for condition evaluation.
+
+        Parameters
+        ----------
+        algorithm : Algorithm
+            Parent QCAlgorithm instance.
+        """
         self.algorithm = algorithm
         self.params = algorithm.parameters
         
@@ -19,15 +31,46 @@ class ConditionsChecker:
             self.algorithm.Log(f"{self.algorithm.Time} - Basic ConditionsChecker initialized with Phase 3 Rally Detection")
     
     def update_rally_data(self, symbol, bar_data):
-        """Update rally detector with new price data"""
+        """
+        Forward new price data to the rally detector.
+
+        Parameters
+        ----------
+        symbol : str
+            Symbol identifier that the data belongs to.
+        bar_data : TradeBar
+            Latest consolidated bar.
+
+        Returns
+        -------
+        None
+        """
         self.rally_detector.update_price_data(symbol, bar_data)
     
     def reset_daily_rally_data(self):
-        """Reset rally detector for new trading day"""
+        """
+        Reset internal rally detector caches for the next session.
+
+        Returns
+        -------
+        None
+        """
         self.rally_detector.reset_daily_data()
     
     def IsConditionEnabled(self, condition):
-        """Check if specific condition is enabled via parameters"""
+        """
+        Check whether a condition is enabled in the parameter set.
+
+        Parameters
+        ----------
+        condition : str
+            Condition identifier such as ``"cond1"``.
+
+        Returns
+        -------
+        bool
+            True if the condition may be evaluated.
+        """
         
         condition_map = {
             'cond1': self.params.C1,
@@ -40,7 +83,21 @@ class ConditionsChecker:
         return condition_map.get(condition, False)
     
     def CheckAllConditions(self, strategy, metrics):
-        """Check all trading conditions using Reference sequential state machine"""
+        """
+        Evaluate the five reference trading conditions.
+
+        Parameters
+        ----------
+        strategy : Strategy
+            Strategy instance executing the checks.
+        metrics : dict
+            Pre-computed metrics supplied by the metrics calculator.
+
+        Returns
+        -------
+        dict
+            Mapping from condition name to boolean flag.
+        """
         
         # Check risk manager validation first (including Max_Daily_PNL)
         if hasattr(self.algorithm, 'risk_manager'):
