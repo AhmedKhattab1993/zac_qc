@@ -1,0 +1,21 @@
+# Project data
+data/
+
+# Logging outputs
+logs/
+*.log
+
+# Backtesting results
+backtest_output/
+backtest_results/
+backtest-results/
+backtests/
+*.backtest
+*.backtest.*
+
+# Local virtual environments
+env/
+path/to/venv/
+
+# macOS artifacts
+.DS_Store
