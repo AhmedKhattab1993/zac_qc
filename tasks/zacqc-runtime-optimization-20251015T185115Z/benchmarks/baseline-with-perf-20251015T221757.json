@@ -1,0 +1,526 @@
+{
+  "run_id": "1370479558",
+  "start_time_utc": "2025-10-15T19:17:58Z",
+  "end_time_utc": "2025-10-15T19:21:18Z",
+  "wall_runtime_seconds": 200.0,
+  "algo_runtime_seconds": 196.58,
+  "warmup_seconds": 4.394031,
+  "data_points_per_second": 14000,
+  "total_data_points": 2808751,
+  "log_count": 34884,
+  "order_count": 89,
+  "perf_per_symbol": {
+    "AAPL": {
+      "data_manager": {
+        "avg_ms": 0.0,
+        "max_ms": 0.06,
+        "count": 187200
+      },
+      "metrics": {
+        "avg_ms": 0.16,
+        "max_ms": 2.82,
+        "count": 12479
+      },
+      "rally_update": {
+        "avg_ms": 0.01,
+        "max_ms": 1.19,
+        "count": 12479
+      },
+      "risk_checks": {
+        "avg_ms": 0.01,
+        "max_ms": 1.19,
+        "count": 12479
+      },
+      "strategy_logic": {
+        "avg_ms": 0.2,
+        "max_ms": 21.8,
+        "count": 12479
+      },
+      "total": {
+        "avg_ms": 0.07,
+        "max_ms": 22.02,
+        "count": 187200
+      }
+    },
+    "ABBV": {
+      "data_manager": {
+        "avg_ms": 0.0,
+        "max_ms": 0.03,
+        "count": 187200
+      },
+      "metrics": {
+        "avg_ms": 0.13,
+        "max_ms": 12.51,
+        "count": 12479
+      },
+      "rally_update": {
+        "avg_ms": 0.01,
+        "max_ms": 0.06,
+        "count": 12479
+      },
+      "risk_checks": {
+        "avg_ms": 0.0,
+        "max_ms": 0.19,
+        "count": 12479
+      },
+      "strategy_logic": {
+        "avg_ms": 0.13,
+        "max_ms": 1.91,
+        "count": 12479
+      },
+      "total": {
+        "avg_ms": 0.06,
+        "max_ms": 12.68,
+        "count": 187200
+      }
+    },
+    "AMD": {
+      "data_manager": {
+        "avg_ms": 0.0,
+        "max_ms": 0.07,
+        "count": 187200
+      },
+      "metrics": {
+        "avg_ms": 0.13,
+        "max_ms": 6.47,
+        "count": 12479
+      },
+      "rally_update": {
+        "avg_ms": 0.01,
+        "max_ms": 1.34,
+        "count": 12479
+      },
+      "risk_checks": {
+        "avg_ms": 0.0,
+        "max_ms": 0.79,
+        "count": 12479
+      },
+      "strategy_logic": {
+        "avg_ms": 0.12,
+        "max_ms": 2.42,
+        "count": 12479
+      },
+      "total": {
+        "avg_ms": 0.06,
+        "max_ms": 33.82,
+        "count": 187200
+      }
+    },
+    "AMZN": {
+      "data_manager": {
+        "avg_ms": 0.0,
+        "max_ms": 0.05,
+        "count": 187200
+      },
+      "metrics": {
+        "avg_ms": 0.14,
+        "max_ms": 1.41,
+        "count": 12479
+      },
+      "rally_update": {
+        "avg_ms": 0.01,
+        "max_ms": 1.4,
+        "count": 12479
+      },
+      "risk_checks": {
+        "avg_ms": 0.0,
+        "max_ms": 0.05,
+        "count": 12479
+      },
+      "strategy_logic": {
+        "avg_ms": 0.18,
+        "max_ms": 2.03,
+        "count": 12479
+      },
+      "total": {
+        "avg_ms": 0.06,
+        "max_ms": 3.97,
+        "count": 187200
+      }
+    },
+    "GS": {
+      "data_manager": {
+        "avg_ms": 0.0,
+        "max_ms": 0.03,
+        "count": 187200
+      },
+      "metrics": {
+        "avg_ms": 0.13,
+        "max_ms": 1.6,
+        "count": 12479
+      },
+      "rally_update": {
+        "avg_ms": 0.01,
+        "max_ms": 1.41,
+        "count": 12479
+      },
+      "risk_checks": {
+        "avg_ms": 0.0,
+        "max_ms": 0.04,
+        "count": 12479
+      },
+      "strategy_logic": {
+        "avg_ms": 0.19,
+        "max_ms": 1.89,
+        "count": 12479
+      },
+      "total": {
+        "avg_ms": 0.06,
+        "max_ms": 2.71,
+        "count": 187200
+      }
+    },
+    "HAL": {
+      "data_manager": {
+        "avg_ms": 0.0,
+        "max_ms": 0.05,
+        "count": 187200
+      },
+      "metrics": {
+        "avg_ms": 0.13,
+        "max_ms": 1.83,
+        "count": 12479
+      },
+      "rally_update": {
+        "avg_ms": 0.01,
+        "max_ms": 0.09,
+        "count": 12479
+      },
+      "risk_checks": {
+        "avg_ms": 0.0,
+        "max_ms": 0.08,
+        "count": 12479
+      },
+      "strategy_logic": {
+        "avg_ms": 0.13,
+        "max_ms": 2.97,
+        "count": 12479
+      },
+      "total": {
+        "avg_ms": 0.06,
+        "max_ms": 3.19,
+        "count": 187200
+      }
+    },
+    "JNJ": {
+      "data_manager": {
+        "avg_ms": 0.0,
+        "max_ms": 3.0,
+        "count": 187200
+      },
+      "metrics": {
+        "avg_ms": 0.13,
+        "max_ms": 1.47,
+        "count": 12479
+      },
+      "rally_update": {
+        "avg_ms": 0.01,
+        "max_ms": 3.64,
+        "count": 12479
+      },
+      "risk_checks": {
+        "avg_ms": 0.0,
+        "max_ms": 0.03,
+        "count": 12479
+      },
+      "strategy_logic": {
+        "avg_ms": 0.2,
+        "max_ms": 12.26,
+        "count": 12479
+      },
+      "total": {
+        "avg_ms": 0.06,
+        "max_ms": 42.04,
+        "count": 187200
+      }
+    },
+    "MCD": {
+      "data_manager": {
+        "avg_ms": 0.0,
+        "max_ms": 0.07,
+        "count": 187200
+      },
+      "metrics": {
+        "avg_ms": 0.13,
+        "max_ms": 2.22,
+        "count": 12479
+      },
+      "rally_update": {
+        "avg_ms": 0.01,
+        "max_ms": 0.12,
+        "count": 12479
+      },
+      "risk_checks": {
+        "avg_ms": 0.0,
+        "max_ms": 0.16,
+        "count": 12479
+      },
+      "strategy_logic": {
+        "avg_ms": 0.21,
+        "max_ms": 18.92,
+        "count": 12479
+      },
+      "total": {
+        "avg_ms": 0.06,
+        "max_ms": 19.13,
+        "count": 187200
+      }
+    },
+    "META": {
+      "data_manager": {
+        "avg_ms": 0.0,
+        "max_ms": 0.73,
+        "count": 187200
+      },
+      "metrics": {
+        "avg_ms": 0.13,
+        "max_ms": 1.75,
+        "count": 12479
+      },
+      "rally_update": {
+        "avg_ms": 0.01,
+        "max_ms": 0.2,
+        "count": 12479
+      },
+      "risk_checks": {
+        "avg_ms": 0.0,
+        "max_ms": 0.43,
+        "count": 12479
+      },
+      "strategy_logic": {
+        "avg_ms": 0.11,
+        "max_ms": 2.63,
+        "count": 12479
+      },
+      "total": {
+        "avg_ms": 0.05,
+        "max_ms": 3.65,
+        "count": 187200
+      }
+    },
+    "NVDA": {
+      "data_manager": {
+        "avg_ms": 0.0,
+        "max_ms": 0.05,
+        "count": 187200
+      },
+      "metrics": {
+        "avg_ms": 0.14,
+        "max_ms": 5.8,
+        "count": 12479
+      },
+      "rally_update": {
+        "avg_ms": 0.01,
+        "max_ms": 0.58,
+        "count": 12479
+      },
+      "risk_checks": {
+        "avg_ms": 0.0,
+        "max_ms": 0.11,
+        "count": 12479
+      },
+      "strategy_logic": {
+        "avg_ms": 0.21,
+        "max_ms": 2.06,
+        "count": 12479
+      },
+      "total": {
+        "avg_ms": 0.06,
+        "max_ms": 6.42,
+        "count": 187200
+      }
+    },
+    "OXY": {
+      "data_manager": {
+        "avg_ms": 0.0,
+        "max_ms": 0.04,
+        "count": 187200
+      },
+      "metrics": {
+        "avg_ms": 0.13,
+        "max_ms": 2.98,
+        "count": 12479
+      },
+      "rally_update": {
+        "avg_ms": 0.01,
+        "max_ms": 0.07,
+        "count": 12479
+      },
+      "risk_checks": {
+        "avg_ms": 0.0,
+        "max_ms": 0.9,
+        "count": 12479
+      },
+      "strategy_logic": {
+        "avg_ms": 0.22,
+        "max_ms": 3.5,
+        "count": 12479
+      },
+      "total": {
+        "avg_ms": 0.06,
+        "max_ms": 13.28,
+        "count": 187200
+      }
+    },
+    "SHOP": {
+      "data_manager": {
+        "avg_ms": 0.0,
+        "max_ms": 0.04,
+        "count": 187200
+      },
+      "metrics": {
+        "avg_ms": 0.13,
+        "max_ms": 1.6,
+        "count": 12479
+      },
+      "rally_update": {
+        "avg_ms": 0.01,
+        "max_ms": 0.06,
+        "count": 12479
+      },
+      "risk_checks": {
+        "avg_ms": 0.0,
+        "max_ms": 0.13,
+        "count": 12479
+      },
+      "strategy_logic": {
+        "avg_ms": 0.19,
+        "max_ms": 3.2,
+        "count": 12479
+      },
+      "total": {
+        "avg_ms": 0.06,
+        "max_ms": 31.23,
+        "count": 187200
+      }
+    },
+    "TSLA": {
+      "data_manager": {
+        "avg_ms": 0.0,
+        "max_ms": 0.05,
+        "count": 187200
+      },
+      "metrics": {
+        "avg_ms": 0.13,
+        "max_ms": 3.09,
+        "count": 12479
+      },
+      "rally_update": {
+        "avg_ms": 0.01,
+        "max_ms": 0.93,
+        "count": 12479
+      },
+      "risk_checks": {
+        "avg_ms": 0.0,
+        "max_ms": 0.04,
+        "count": 12479
+      },
+      "strategy_logic": {
+        "avg_ms": 0.14,
+        "max_ms": 2.42,
+        "count": 12479
+      },
+      "total": {
+        "avg_ms": 0.06,
+        "max_ms": 11.45,
+        "count": 187200
+      }
+    },
+    "UBER": {
+      "data_manager": {
+        "avg_ms": 0.0,
+        "max_ms": 0.04,
+        "count": 187200
+      },
+      "metrics": {
+        "avg_ms": 0.13,
+        "max_ms": 1.63,
+        "count": 12479
+      },
+      "rally_update": {
+        "avg_ms": 0.01,
+        "max_ms": 1.04,
+        "count": 12479
+      },
+      "risk_checks": {
+        "avg_ms": 0.0,
+        "max_ms": 0.04,
+        "count": 12479
+      },
+      "strategy_logic": {
+        "avg_ms": 0.17,
+        "max_ms": 1.94,
+        "count": 12479
+      },
+      "total": {
+        "avg_ms": 0.06,
+        "max_ms": 10.87,
+        "count": 187200
+      }
+    },
+    "V": {
+      "data_manager": {
+        "avg_ms": 0.0,
+        "max_ms": 0.05,
+        "count": 187200
+      },
+      "metrics": {
+        "avg_ms": 0.13,
+        "max_ms": 3.03,
+        "count": 12479
+      },
+      "rally_update": {
+        "avg_ms": 0.01,
+        "max_ms": 0.64,
+        "count": 12479
+      },
+      "risk_checks": {
+        "avg_ms": 0.0,
+        "max_ms": 0.09,
+        "count": 12479
+      },
+      "strategy_logic": {
+        "avg_ms": 0.23,
+        "max_ms": 2.59,
+        "count": 12479
+      },
+      "total": {
+        "avg_ms": 0.06,
+        "max_ms": 3.47,
+        "count": 187200
+      }
+    }
+  },
+  "perf_aggregate": {
+    "data_manager": {
+      "avg_ms": 0.0,
+      "max_ms": 3.0,
+      "count": 2808000
+    },
+    "metrics": {
+      "avg_ms": 0.14,
+      "max_ms": 12.51,
+      "count": 187185
+    },
+    "rally_update": {
+      "avg_ms": 0.01,
+      "max_ms": 3.64,
+      "count": 187185
+    },
+    "risk_checks": {
+      "avg_ms": 0.0,
+      "max_ms": 1.19,
+      "count": 187185
+    },
+    "strategy_logic": {
+      "avg_ms": 0.18,
+      "max_ms": 21.8,
+      "count": 187185
+    },
+    "total": {
+      "avg_ms": 0.06,
+      "max_ms": 42.04,
+      "count": 2808000
+    }
+  }
+}

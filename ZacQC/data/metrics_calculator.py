@@ -142,35 +142,33 @@ class MetricsCalculator:
             return 0.0
         
         # Find bars within the time window (exact Reference logic)
-        valid_bars = []
-        current_bar_time = self.data_manager.bars_15s[0].Time
-        
-        for i in range(self.data_manager.bars_15s.Count):
-            bar = self.data_manager.bars_15s[i]
-            diff_seconds = (current_bar_time - bar.Time).total_seconds()
-            
-            # Include bars within max_seconds and after market open
-            if diff_seconds <= max_seconds and bar.Time >= market_open:
-                valid_bars.append(bar)
-            else:
-                break  # Stop when we go beyond time window
-        
-        if len(valid_bars) < 2:
-            return 0.0
-        
-        # Calculate max down percentage (exact Reference replication)
-        max_down = 0.0  # Start at 0, look for negative values
-        max_high = valid_bars[0].High
+        bars_15s = self.data_manager.bars_15s
+        current_bar_time = bars_15s[0].Time
 
-        for bar in valid_bars[1:]:
+        start_idx = None
+        for idx in range(bars_15s.Count - 1, -1, -1):
+            bar = bars_15s[idx]
+            diff_seconds = (current_bar_time - bar.Time).total_seconds()
+            if diff_seconds > max_seconds or bar.Time < market_open:
+                break
+            start_idx = idx
+
+        if start_idx is None or start_idx >= bars_15s.Count - 1:
+            return 0.0
+
+        max_down = 0.0
+        max_high = bars_15s[start_idx].High
+
+        for idx in range(start_idx + 1, bars_15s.Count):
+            bar = bars_15s[idx]
             if bar.High > max_high:
                 max_high = bar.High
-            
+
             if max_high > 0:
                 down_pct = (bar.Low - max_high) * 100 / max_high
                 if down_pct < max_down:
-                    max_down = down_pct  # Keep most negative
-        
+                    max_down = down_pct
+
         return max_down
     
     def CalculateVWAPMetrics(self, current_price):

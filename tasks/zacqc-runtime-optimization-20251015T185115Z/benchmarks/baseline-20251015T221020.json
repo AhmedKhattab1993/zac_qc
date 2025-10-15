@@ -1,0 +1,12 @@
+{
+  "run_id": "1149406114",
+  "start_time_utc": "2025-10-15T19:10:21Z",
+  "end_time_utc": "2025-10-15T19:13:44Z",
+  "wall_runtime_seconds": 203.0,
+  "algo_runtime_seconds": 199.58,
+  "warmup_seconds": 4.38794,
+  "data_points_per_second": 14000,
+  "total_data_points": 2808751,
+  "log_count": 34867,
+  "order_count": 89
+}
