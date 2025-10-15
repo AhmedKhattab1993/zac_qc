@@ -20,20 +20,13 @@ from trading.trail_order_manager import TrailOrderManager
 
 class ZacReferenceAlgorithm(QCAlgorithm):
     """
-    Simplified ZacQC reference algorithm orchestrating multi-symbol trading.
-
-    The implementation wires together risk management, condition evaluation,
-    order routing, and daily bookkeeping while mirroring the reference logic.
+    Reference Implementation - Simplified Trading Algorithm
+    Migrated from ZacQC enhanced system to pure Reference behavior
+    Parameters reduced from 220 to 81 (77 Reference + 4 frontend)
     """
     
     def Initialize(self):
-        """
-        Configure the algorithm universe, risk controls, and scheduling hooks.
-
-        Returns
-        -------
-        None
-        """
+        """Initialize the trading algorithm"""
         
         try:
             # Enable/disable logging globally (set to False to reduce RAM consumption)
@@ -121,18 +114,7 @@ class ZacReferenceAlgorithm(QCAlgorithm):
             raise
     
     def OnData(self, data):
-        """
-        Dispatch data slices to each symbol manager.
-
-        Parameters
-        ----------
-        data : Slice
-            QuantConnect data slice for the current time step.
-
-        Returns
-        -------
-        None
-        """
+        """Main data processing method - handles multiple symbols"""
         
         try:
             # Process data for each symbol that has data
@@ -154,18 +136,7 @@ class ZacReferenceAlgorithm(QCAlgorithm):
                 self.Log(f"Traceback: {traceback.format_exc()}")
     
     def OnEndOfDay(self, symbol):
-        """
-        Perform final per-symbol verification when markets close.
-
-        Parameters
-        ----------
-        symbol : Symbol
-            Symbol for which the event fired.
-
-        Returns
-        -------
-        None
-        """
+        """Built-in end of day processing - final cleanup after market close"""
         
         try:
             # Find which symbol this is and do final verification
@@ -191,18 +162,7 @@ class ZacReferenceAlgorithm(QCAlgorithm):
                 self.Log(f"ERROR in OnEndOfDay: {str(e)}")
     
     def OnOrderEvent(self, orderEvent):
-        """
-        Route order lifecycle events to the appropriate symbol manager.
-
-        Parameters
-        ----------
-        orderEvent : OrderEvent
-            Order event emitted by the QuantConnect transaction engine.
-
-        Returns
-        -------
-        None
-        """
+        """Handle order events - handles multiple symbols"""
         
         try:
             # Find which symbol this order belongs to and route to appropriate symbol manager
@@ -229,13 +189,7 @@ class ZacReferenceAlgorithm(QCAlgorithm):
                 self.Log(f"ERROR in OnOrderEvent: {str(e)}")
     
     def CustomEndOfDay(self):
-        """
-        Execute one-minute-prior liquidation routine.
-
-        Returns
-        -------
-        None
-        """
+        """Custom end-of-day liquidation called at 15:59"""
         
         try:
             if self.enable_logging:
@@ -264,13 +218,7 @@ class ZacReferenceAlgorithm(QCAlgorithm):
                 self.Log(f"Traceback: {traceback.format_exc()}")
     
     def CancelEntryOrdersAtAlgoOff(self):
-        """
-        Cancel pending entry orders while preserving exit protections.
-
-        Returns
-        -------
-        None
-        """
+        """Cancel only pending entry orders at Algo_Off_After time"""
         
         try:
             if self.enable_logging:

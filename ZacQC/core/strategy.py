@@ -4,35 +4,11 @@ from datetime import timedelta
 
 class Strategy:
     """
-    Execute ZacQC reference trading logic for a single symbol.
-
-    The strategy tracks condition state machines, pending orders, and timing
-    constraints. It mirrors the original production behaviour while exposing
-    simplified hooks for the reference implementation.
-
-    Parameters
-    ----------
-    algorithm : Algorithm
-        Owning QCAlgorithm instance.
-    account_id : str
-        Identifier used for logging and metrics segregation.
-    symbol_name : str
-        Human readable ticker for the instrument.
+    Basic strategy management for Reference behavior
+    Simplified from enhanced ZacQC implementation
     """
     
     def __init__(self, algorithm, account_id, symbol_name):
-        """
-        Capture algorithm references and initialise state containers.
-
-        Parameters
-        ----------
-        algorithm : Algorithm
-            Parent QCAlgorithm instance.
-        account_id : str
-            Logical account name used in logs.
-        symbol_name : str
-            Symbol identifier for this strategy.
-        """
         self.algorithm = algorithm
         self.account_id = account_id
         self.symbol_name = symbol_name
@@ -86,13 +62,7 @@ class Strategy:
             self.algorithm.Log(f"{self.algorithm.Time} - Basic Strategy initialized for {symbol_name} - account {account_id}")
     
     def Initialize(self):
-        """
-        Prepare the strategy for use by clearing caches and resetting flags.
-
-        Returns
-        -------
-        None
-        """
+        """Initialize basic strategy"""
         
         # Reset all states
         self.pending_orders.clear()
@@ -105,13 +75,7 @@ class Strategy:
             self.algorithm.Log(f"{self.algorithm.Time} - Basic strategy initialized for {self.symbol_name}")
     
     def ResetDailyState(self):
-        """
-        Reset daily tracking to enforce per-session constraints.
-
-        Returns
-        -------
-        None
-        """
+        """Reset daily strategy state"""
         
         # Clear pending orders
         self.pending_orders.clear()
@@ -143,13 +107,7 @@ class Strategy:
             self.condition_states[condition] = False
     
     def LogTrailingOrderPrices(self):
-        """
-        Monitor trailing entry orders and resubmit when market moves favourably.
-
-        Returns
-        -------
-        None
-        """
+        """Log current stop prices and update trailing entry orders - called every 15 seconds"""
         if not self.pending_orders:
             return
             
@@ -225,20 +183,7 @@ class Strategy:
             self.algorithm.Log(f"{self.algorithm.Time} - Daily state reset for {self.symbol_name}")
     
     def UpdateConditionState(self, condition, state):
-        """
-        Update both legacy and reference condition flags.
-
-        Parameters
-        ----------
-        condition : str
-            Condition key such as ``"cond1"``.
-        state : bool
-            Whether the condition is active.
-
-        Returns
-        -------
-        None
-        """
+        """Update condition state - legacy compatibility"""
         
         if condition in self.condition_states:
             self.condition_states[condition] = state
@@ -256,19 +201,7 @@ class Strategy:
             self.c5 = state
     
     def GetConditionState(self, condition):
-        """
-        Retrieve a condition flag with backwards compatibility.
-
-        Parameters
-        ----------
-        condition : str
-            Condition key such as ``"cond1"``.
-
-        Returns
-        -------
-        bool
-            Current state of the requested condition.
-        """
+        """Get condition state - legacy compatibility"""
         
         # Phase 3: Get from Reference-style persistent states
         if condition == 'cond1':
@@ -285,20 +218,7 @@ class Strategy:
         return self.condition_states.get(condition, False)
     
     def set_condition_state(self, condition, state):
-        """
-        Persist a reference-style condition flag.
-
-        Parameters
-        ----------
-        condition : str
-            Reference-style key (``"c1"``-``"c5"``).
-        state : bool
-            Desired state.
-
-        Returns
-        -------
-        None
-        """
+        """Set persistent condition state (Reference-style - replaces strategy.c1 = True)"""
         if condition == 'c1':
             self.c1 = state
         elif condition == 'c2':
@@ -316,19 +236,7 @@ class Strategy:
             self.condition_states[condition_key] = state
             
     def get_condition_state(self, condition):
-        """
-        Fetch a reference-style condition flag.
-
-        Parameters
-        ----------
-        condition : str
-            Reference-style key (``"c1"``-``"c5"``).
-
-        Returns
-        -------
-        bool
-            State of the requested condition.
-        """
+        """Get persistent condition state (Reference-style - replaces strategy.c1)"""
         if condition == 'c1':
             return self.c1
         elif condition == 'c2':
@@ -342,33 +250,11 @@ class Strategy:
         return False
         
     def reset_condition_state(self, condition):
-        """
-        Clear a reference-style condition flag.
-
-        Parameters
-        ----------
-        condition : str
-            Reference-style key to reset.
-
-        Returns
-        -------
-        None
-        """
+        """Reset condition state when rally/VWAP fails (Reference-style)"""
         self.set_condition_state(condition, False)
-    
+        
     def update_last_execution_date(self, condition):
-        """
-        Record the last time a condition executed.
-
-        Parameters
-        ----------
-        condition : str
-            Reference-style key (``"c1"``-``"c5"``).
-
-        Returns
-        -------
-        None
-        """
+        """Update last execution date for timing constraints (Reference-style)"""
         current_time = self.algorithm.Time
         if condition == 'c1':
             self.last_execution_date_c1 = current_time
@@ -382,19 +268,7 @@ class Strategy:
             self.last_execution_date_c5 = current_time
             
     def get_last_execution_date(self, condition):
-        """
-        Retrieve the last execution timestamp for a condition.
-
-        Parameters
-        ----------
-        condition : str
-            Reference-style key (``"c1"``-``"c5"``).
-
-        Returns
-        -------
-        datetime.datetime
-            Timestamp recorded for the condition.
-        """
+        """Get last execution date for timing constraints (Reference-style)"""
         if condition == 'c1':
             return self.last_execution_date_c1
         elif condition == 'c2':
@@ -408,72 +282,23 @@ class Strategy:
         return self.algorithm.Time
     
     def AddPendingOrder(self, condition, order_info):
-        """
-        Register a pending order against a condition key.
-
-        Parameters
-        ----------
-        condition : str
-            Condition identifier.
-        order_info : dict
-            Metadata associated with the order.
-
-        Returns
-        -------
-        None
-        """
+        """Add pending order"""
         
         self.pending_orders[condition] = order_info
     
     def RemovePendingOrder(self, condition):
-        """
-        Remove tracked order metadata.
-
-        Parameters
-        ----------
-        condition : str
-            Condition identifier.
-
-        Returns
-        -------
-        None
-        """
+        """Remove pending order"""
         
         if condition in self.pending_orders:
             del self.pending_orders[condition]
     
     def GetPendingOrder(self, condition):
-        """
-        Access order metadata by condition key.
-
-        Parameters
-        ----------
-        condition : str
-            Condition identifier.
-
-        Returns
-        -------
-        dict or None
-            Stored order information.
-        """
+        """Get pending order"""
         
         return self.pending_orders.get(condition, None)
     
     def UpdatePosition(self, symbol, quantity):
-        """
-        Adjust cached position quantity for the supplied symbol.
-
-        Parameters
-        ----------
-        symbol : Symbol
-            QuantConnect symbol to update.
-        quantity : int
-            Position delta that should be applied.
-
-        Returns
-        -------
-        None
-        """
+        """Update position tracking"""
         
         if symbol not in self.active_positions:
             self.active_positions[symbol] = 0
@@ -481,34 +306,15 @@ class Strategy:
         self.active_positions[symbol] += quantity
     
     def GetPosition(self, symbol):
-        """
-        Fetch cached position quantity for a symbol.
-
-        Parameters
-        ----------
-        symbol : Symbol
-            QuantConnect symbol to query.
-
-        Returns
-        -------
-        int
-            Current tracked position size (defaults to 0).
-        """
+        """Get position quantity"""
         
         return self.active_positions.get(symbol, 0)
     
     def trade_time_action(self, last_price):
         """
-        Execute delayed trade management logic relative to entry time.
-
-        Parameters
-        ----------
-        last_price : float
-            Latest trade price for the symbol.
-
-        Returns
-        -------
-        None
+        Execute time-based actions on trades (Reference: ib.py lines 197-254)
+        Action1: Move TP/SL to breakeven after Action1_Time minutes
+        Action2: Cancel all orders and close positions after Action2_Time minutes
         """
         # Skip if actions are disabled
         if not self.cfg.Allow_Actions:
@@ -561,20 +367,7 @@ class Strategy:
             self._close_position()
             
     def _adjust_tp_to_breakeven(self, symbol, breakeven_price):
-        """
-        Move take-profit orders to the breakeven level.
-
-        Parameters
-        ----------
-        symbol : Symbol
-            QuantConnect symbol whose orders should be updated.
-        breakeven_price : float
-            Target price to set on limit orders.
-
-        Returns
-        -------
-        None
-        """
+        """Adjust take profit orders to breakeven price"""
         for order in self.algorithm.Transactions.GetOpenOrders(symbol):
             # Check if this is a TP order
             if "-TP" in order.Tag or "TP-" in order.Tag:
@@ -599,20 +392,7 @@ class Strategy:
                         self.algorithm.Log(f"{self.algorithm.Time} - ACTION 1 ERROR: Failed to update TP order: {e}")
                     
     def _adjust_sl_to_breakeven(self, symbol, breakeven_price):
-        """
-        Move stop-loss orders to the breakeven level.
-
-        Parameters
-        ----------
-        symbol : Symbol
-            QuantConnect symbol whose orders should be updated.
-        breakeven_price : float
-            Target price to set on stop orders.
-
-        Returns
-        -------
-        None
-        """
+        """Adjust stop loss orders to breakeven price"""
         for order in self.algorithm.Transactions.GetOpenOrders(symbol):
             # Check if this is a SL order
             if "-SL" in order.Tag or "SL-" in order.Tag:

@@ -5,12 +5,8 @@ from QuantConnect.Data.Market import TradeBar
 
 class PreciseFillModel(FillModel):
     """
-    Fill model that removes bid/ask spread to mirror reference behaviour.
-
-    Parameters
-    ----------
-    algorithm : Algorithm, optional
-        Owning algorithm used purely for diagnostic logging.
+    Custom fill model that fills orders at exact prices without bid-ask spread
+    This ensures P&L limits are respected precisely in backtests
     """
     
     def __init__(self, algorithm=None):
@@ -18,21 +14,7 @@ class PreciseFillModel(FillModel):
         self.algorithm = algorithm
     
     def MarketFill(self, asset, order):
-        """
-        Fill market orders at the last observed trade price.
-
-        Parameters
-        ----------
-        asset : Security
-            Security being traded.
-        order : Order
-            Order submitted by the algorithm.
-
-        Returns
-        -------
-        OrderEvent
-            Filled order event describing the execution.
-        """
+        """Fill market orders at the current price"""
         
         # Create order event
         fill = self._CreateOrderEvent(asset, order)
@@ -58,21 +40,7 @@ class PreciseFillModel(FillModel):
         return fill
     
     def StopMarketFill(self, asset, order):
-        """
-        Trigger stop-market orders at the configured stop level.
-
-        Parameters
-        ----------
-        asset : Security
-            Security being traded.
-        order : StopMarketOrder
-            Stop market order submitted by the algorithm.
-
-        Returns
-        -------
-        OrderEvent
-            Filled order event when the trigger fires, otherwise the original event.
-        """
+        """Fill stop market orders at exact stop price when triggered"""
         
         # Create order event
         fill = self._CreateOrderEvent(asset, order)
@@ -119,21 +87,7 @@ class PreciseFillModel(FillModel):
         return fill
     
     def LimitFill(self, asset, order):
-        """
-        Execute limit orders at the quoted limit price when touched.
-
-        Parameters
-        ----------
-        asset : Security
-            Security being traded.
-        order : LimitOrder
-            Limit order submitted by the algorithm.
-
-        Returns
-        -------
-        OrderEvent
-            Filled order event when the price is reached.
-        """
+        """Fill limit orders at exact limit price when touched"""
         
         # Create order event
         fill = self._CreateOrderEvent(asset, order)
@@ -184,21 +138,7 @@ class PreciseFillModel(FillModel):
         return fill
     
     def MarketOnOpenFill(self, asset, order):
-        """
-        Fill market-on-open orders at the official open price.
-
-        Parameters
-        ----------
-        asset : Security
-            Security being traded.
-        order : MarketOnOpenOrder
-            Order submitted by the algorithm.
-
-        Returns
-        -------
-        OrderEvent
-            Filled order event if the exchange is open.
-        """
+        """Fill market on open orders"""
         
         # Create order event
         fill = self._CreateOrderEvent(asset, order)
@@ -216,21 +156,7 @@ class PreciseFillModel(FillModel):
         return fill
     
     def MarketOnCloseFill(self, asset, order):
-        """
-        Fill market-on-close orders at the closing price.
-
-        Parameters
-        ----------
-        asset : Security
-            Security being traded.
-        order : MarketOnCloseOrder
-            Order submitted by the algorithm.
-
-        Returns
-        -------
-        OrderEvent
-            Filled order event at the close price.
-        """
+        """Fill market on close orders"""
         
         # Create order event
         fill = self._CreateOrderEvent(asset, order)
@@ -246,21 +172,7 @@ class PreciseFillModel(FillModel):
         return fill
     
     def _CreateOrderEvent(self, asset, order):
-        """
-        Instantiate an order event anchored to the asset's exchange timezone.
-
-        Parameters
-        ----------
-        asset : Security
-            Security being traded.
-        order : Order
-            Order submitted by the algorithm.
-
-        Returns
-        -------
-        OrderEvent
-            Base order event object with zero fees applied.
-        """
+        """Create an order event with proper UTC time"""
         
         utc_time = Extensions.ConvertToUtc(asset.LocalTime, asset.Exchange.TimeZone)
         # Use zero fees for backtesting precision

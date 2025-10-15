@@ -3,28 +3,17 @@ from AlgorithmImports import *
 
 class OrderManager:
     """
-    Coordinate entry and exit order lifecycles for the reference strategy.
-
-    The manager encapsulates phase 1 risk controls, phase 2 trailing entry
-    mechanics, and the phase 2.5 safety patches that delay SL/TP creation
-    until fills confirm. It also enforces hard constraints to avoid duplicate
-    orders.
-
-    Parameters
-    ----------
-    algorithm : Algorithm
-        Parent QCAlgorithm wrapped by the symbol manager.
+    Phase 2.5: Critical Risk Management Fixes - IMMEDIATE PRIORITY
+    - Removes premature SL/TP creation (was causing risk exposure)
+    - Creates SL/TP ONLY after entry fills using actual fill prices
+    - Implements mutual cancellation between SL and TP orders
+    - Enhanced order tracking to prevent double exits
+    
+    Phase 2: Trailing entry order execution and management for Reference behavior
+    Phase 1: Stop Loss and Profit Take management systems
     """
     
     def __init__(self, algorithm):
-        """
-        Initialise state containers used for order tracking.
-
-        Parameters
-        ----------
-        algorithm : Algorithm
-            Parent QCAlgorithm wrapped by the symbol manager.
-        """
         self.algorithm = algorithm
         self.params = algorithm.parameters
         self.data_manager = algorithm.data_manager
@@ -49,25 +38,7 @@ class OrderManager:
             self.algorithm.Log("OrderManager initialized with HARD CONSTRAINT system, Phase 2.5 critical risk fixes, Phase 2 trailing entry orders and Phase 1 risk management systems")
     
     def ExecuteLongEntry(self, strategy, condition, current_price, metrics):
-        """
-        Submit a long trailing entry order when prerequisites are satisfied.
-
-        Parameters
-        ----------
-        strategy : Strategy
-            Strategy issuing the order.
-        condition : str
-            Condition identifier (``"cond1"``-``"cond3"``).
-        current_price : float
-            Latest traded price.
-        metrics : dict
-            Metrics snapshot used for validation.
-
-        Returns
-        -------
-        bool
-            True when the order was submitted.
-        """
+        """Execute trailing long entry order - Phase 2 Implementation with Phase 3 VWAP validation"""
         
         # Phase 3: VWAP validation before order placement
         if not self.validate_vwap_conditions("LONG"):
@@ -185,25 +156,7 @@ class OrderManager:
         return True  # Order placed successfully
     
     def ExecuteShortEntry(self, strategy, condition, current_price, metrics):
-        """
-        Submit a short trailing entry order when prerequisites are satisfied.
-
-        Parameters
-        ----------
-        strategy : Strategy
-            Strategy issuing the order.
-        condition : str
-            Condition identifier (``"cond4"``-``"cond5"``).
-        current_price : float
-            Latest traded price.
-        metrics : dict
-            Metrics snapshot used for validation.
-
-        Returns
-        -------
-        bool
-            True when the order was submitted.
-        """
+        """Execute trailing short entry order - Phase 2 Implementation with Phase 3 VWAP validation"""
         
         # Phase 3: VWAP validation before order placement
         if not self.validate_vwap_conditions("SHORT"):

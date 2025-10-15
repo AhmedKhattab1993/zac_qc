@@ -3,23 +3,11 @@ from AlgorithmImports import *
 
 class RiskManager:
     """
-    Enforce ZacQC reference risk constraints and daily P&L limits.
-
-    Parameters
-    ----------
-    algorithm : Algorithm
-        Parent QCAlgorithm instance.
+    Basic risk management for Reference behavior
+    Simplified from enhanced ZacQC implementation
     """
     
     def __init__(self, algorithm):
-        """
-        Initialise risk tracking storage and references.
-
-        Parameters
-        ----------
-        algorithm : Algorithm
-            Parent QCAlgorithm instance.
-        """
         self.algorithm = algorithm
         self.params = algorithm.parameters
         
@@ -33,19 +21,7 @@ class RiskManager:
             self.algorithm.Log("Basic RiskManager initialized")
     
     def ValidateTradingConditions(self, metrics=None):
-        """
-        Decide whether the strategy may trade at the current time.
-
-        Parameters
-        ----------
-        metrics : dict, optional
-            Optionally supplied metric bundle for context.
-
-        Returns
-        -------
-        bool
-            True when trading is permitted, otherwise False.
-        """
+        """Basic trading validation - Reference behavior"""
         
         # Check daily P&L limit
         if self.CheckDailyPnLLimit():
@@ -58,14 +34,7 @@ class RiskManager:
         return True
     
     def CheckDailyPnLLimit(self):
-        """
-        Determine whether the daily P&L limit has been breached.
-
-        Returns
-        -------
-        bool
-            True when the limit is hit and trading should halt.
-        """
+        """Check if daily P&L limit is reached - matches reference implementation"""
         
         # Calculate net liquidation value (portfolio value)
         net_liq = self.algorithm.Portfolio.TotalPortfolioValue
@@ -171,34 +140,11 @@ class RiskManager:
         return False
     
     def IsMarketOpen(self):
-        """
-        Check whether the primary symbol's market is open.
-
-        Returns
-        -------
-        bool
-            True if the exchange is open for trading.
-        """
+        """Check if market is open"""
         return self.algorithm.IsMarketOpen(self.algorithm.symbol)
     
     def CanPlaceOrder(self, symbol, quantity, current_price):
-        """
-        Validate a prospective order against daily P&L gating.
-
-        Parameters
-        ----------
-        symbol : Symbol
-            Symbol to be traded.
-        quantity : int
-            Intended order quantity.
-        current_price : float
-            Price estimate used for validation.
-
-        Returns
-        -------
-        bool
-            True when the order may be placed.
-        """
+        """Check if placing this order would potentially exceed daily P&L limit"""
         
         # Simple flag check - if limit was reached today, no new orders allowed
         if self.daily_limit_reached:
@@ -208,23 +154,11 @@ class RiskManager:
         return True
     
     def UpdateDailyPnL(self):
-        """
-        Refresh cached daily P&L metrics from the portfolio.
-
-        Returns
-        -------
-        None
-        """
+        """Update daily P&L tracking"""
         self.daily_pnl = self.algorithm.Portfolio.TotalUnrealizedProfit + self.algorithm.Portfolio.TotalProfit
     
     def ResetDaily(self):
-        """
-        Reset daily risk state in preparation for the next session.
-
-        Returns
-        -------
-        None
-        """
+        """Reset daily risk tracking - called at end of day"""
         
         self.daily_pnl = 0
         self.max_daily_loss_reached = False
@@ -247,13 +181,7 @@ class RiskManager:
             # This prevents mid-day resets if ResetDaily is called accidentally
     
     def HandleTargetPnLReached(self):
-        """
-        Execute liquidation and cancellation workflow after hitting the target P&L.
-
-        Returns
-        -------
-        None
-        """
+        """Handle when target P&L is reached - matches reference implementation"""
         
         if self.algorithm.enable_logging:
             self.algorithm.Log("=== TARGET P&L REACHED - CANCELLING ENTRY ORDERS & LIQUIDATING POSITIONS ===")

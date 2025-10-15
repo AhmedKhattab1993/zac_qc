@@ -8,35 +8,14 @@ from trading.conditions_checker import ConditionsChecker
 from core.strategy import Strategy
 
 class AlgorithmWrapper:
-    """
-    Lightweight proxy that injects per-symbol context.
-
-    Parameters
-    ----------
-    algorithm : Algorithm
-        Primary QCAlgorithm instance.
-    symbol : Symbol
-        QuantConnect symbol that the wrapper should expose as ``algorithm.symbol``.
-    """
+    """Wrapper to provide symbol-specific context"""
     
     def __init__(self, algorithm, symbol):
         self.algorithm = algorithm
         self.symbol = symbol
     
     def __getattr__(self, name):
-        """
-        Delegate attribute access to the backing algorithm while overriding ``symbol``.
-
-        Parameters
-        ----------
-        name : str
-            Attribute being accessed.
-
-        Returns
-        -------
-        Any
-            Value from the wrapped algorithm or the wrapper's symbol.
-        """
+        """Delegate all other attributes to the original algorithm"""
         # CRITICAL FIX: Intercept 'symbol' access to return the wrapper's symbol instead of the main algorithm's symbol
         if name == 'symbol':
             return self.symbol
@@ -44,20 +23,8 @@ class AlgorithmWrapper:
 
 class SymbolManager:
     """
-    Coordinate symbol-specific state, data feeds, metrics, and order routing.
-
-    The SymbolManager wires together data collection, risk checks, and strategy
-    evaluation for a single instrument. It mirrors the original ZacQC behaviour
-    while stripping non-reference features.
-
-    Parameters
-    ----------
-    algorithm : Algorithm
-        Parent QCAlgorithm instance.
-    symbol_name : str
-        Human readable ticker (e.g. ``"AAPL"``).
-    symbol : Symbol
-        QuantConnect Symbol returned by ``AddEquity``.
+    Basic symbol management for Reference behavior
+    Simplified from enhanced ZacQC implementation
     """
     
     def __init__(self, algorithm, symbol_name, symbol):
@@ -87,13 +54,7 @@ class SymbolManager:
             self.algorithm.Log(f"{self.algorithm.Time} - SymbolManager created for {symbol_name} with Phase 1 timing controls")
     
     def Initialize(self):
-        """
-        Bootstrap symbol-specific services and link them to the wrapper.
-
-        Returns
-        -------
-        None
-        """
+        """Initialize basic symbol management"""
         
         try:
             # Symbol already provided in constructor - no need to add again
@@ -127,13 +88,7 @@ class SymbolManager:
             raise
     
     def InitializeBasicStrategy(self):
-        """
-        Construct and prime the default strategy instance.
-
-        Returns
-        -------
-        None
-        """
+        """Initialize basic strategy for Reference behavior"""
         
         # Create single basic strategy
         strategy = Strategy(self.algorithm, "basic_strategy", self.symbol_name)
@@ -144,18 +99,7 @@ class SymbolManager:
             self.algorithm.Log(f"{self.algorithm.Time} - Basic strategy initialized for {self.symbol_name}")
     
     def OnData(self, data):
-        """
-        Run per-symbol data processing pipeline.
-
-        Parameters
-        ----------
-        data : Slice
-            QuantConnect data slice for the current time step.
-
-        Returns
-        -------
-        None
-        """
+        """Process data for this symbol - Reference behavior"""
         
         if self.symbol not in data or not data[self.symbol]:
             return
@@ -220,22 +164,7 @@ class SymbolManager:
             self.algorithm.Error(f"Error in OnData for {self.symbol_name}: {e}")
     
     def ProcessBasicStrategy(self, strategy, data, metrics):
-        """
-        Evaluate trading conditions and place orders when triggers fire.
-
-        Parameters
-        ----------
-        strategy : Strategy
-            Strategy instance to evaluate.
-        data : Slice
-            Market data slice for this algorithm step.
-        metrics : dict
-            Cached metrics calculated by ``MetricsCalculator``.
-
-        Returns
-        -------
-        None
-        """
+        """Process basic trading logic for strategy"""
         
         current_price = data[self.symbol].Close
         
@@ -281,30 +210,13 @@ class SymbolManager:
                 # This happens in order_manager._handle_sltp_fill_and_cancel_counterpart
     
     def OnOrderEvent(self, orderEvent):
-        """
-        Forward order events to the order manager when they belong to this symbol.
-
-        Parameters
-        ----------
-        orderEvent : OrderEvent
-            QuantConnect order event payload.
-
-        Returns
-        -------
-        None
-        """
+        """Handle order events for this symbol"""
         
         if orderEvent.Symbol == self.symbol:
             self.order_manager.OnOrderEvent(orderEvent, self.strategies)
     
     def CustomEndOfDay(self):
-        """
-        Execute forced liquidation logic prior to the market close.
-
-        Returns
-        -------
-        None
-        """
+        """Custom end-of-day liquidation at 15:59 (1 minute before market close)"""
         
         if self.algorithm.enable_logging:
             self.algorithm.Log(f"{self.algorithm.Time} - === Custom EOD liquidation started for {self.symbol_name} at 15:59 ===")
@@ -328,13 +240,7 @@ class SymbolManager:
             self.algorithm.Log(f"{self.algorithm.Time} - Custom EOD liquidation complete for {self.symbol_name}")
     
     def OnMarketClose(self):
-        """
-        Perform bookkeeping when the QuantConnect framework fires ``OnEndOfDay``.
-
-        Returns
-        -------
-        None
-        """
+        """Built-in market close handler - used for final cleanup only"""
         
         # This runs after market close - just log final status
         portfolio_quantity = self.algorithm.Portfolio[self.symbol].Quantity
@@ -346,13 +252,7 @@ class SymbolManager:
                 self.algorithm.Log(f"{self.algorithm.Time} - Confirmed: {self.symbol_name} position properly closed at market close")
     
     def ResetDailyStates(self):
-        """
-        Clear caches and flags in preparation for the next trading session.
-
-        Returns
-        -------
-        None
-        """
+        """Reset all daily tracking states for next trading day"""
         
         # Reset data manager daily values (but preserve accumulated bars)
         if hasattr(self.data_manager, 'ResetDaily'):
@@ -378,17 +278,8 @@ class SymbolManager:
     
     def ValidateTimingConstraints(self, condition):
         """
-        Enforce cool-down periods between entries for the symbol and condition.
-
-        Parameters
-        ----------
-        condition : str
-            Condition identifier such as ``"cond1"``.
-
-        Returns
-        -------
-        bool
-            True when trading is permitted, otherwise False.
+        Check if enough time has passed for this condition and symbol
+        Reference: lines 765, 777, 805, 818, 830 in ib.py
         """
         current_time = self.algorithm.Time
         
@@ -436,17 +327,9 @@ class SymbolManager:
     
     def check_liquidity_threshold(self, metrics):
         """
-        Verify that liquidity metrics satisfy configured minimums.
-
-        Parameters
-        ----------
-        metrics : dict
-            Metric snapshot generated by ``MetricsCalculator``.
-
-        Returns
-        -------
-        bool
-            True when trading may proceed, False when liquidity is insufficient.
+        Check if liquidity meets minimum threshold (Reference implementation)
+        Formula: if metric_liquidity/1e6 > liquidity_threshold
+        Returns True if trading is allowed, False if liquidity is too low
         """
         try:
             # Get liquidity threshold parameter

@@ -5,14 +5,13 @@ import os
 
 class TradingParameters:
     """
-    Container for ZacQC trading parameters sourced from the legacy sheets.
-
-    The configuration mirrors the reference project ordering so both the
-    frontend and backtests rely on the same canonical defaults.
+    All trading parameters - replaces Google Sheets configuration
+    Modify these values to adjust trading behavior
+    
+    FRONTEND-CONFIGURABLE PARAMETERS ARE ORDERED FIRST
     """
     
     def __init__(self):
-        """Populate parameter attributes with reference values."""
         # ========================================================================
         # FRONTEND-CONFIGURABLE PARAMETERS (Set from Web UI) - ORDER PRIORITY #1
         # EXACT MAPPING TO REFERENCE PROJECT drive_sheet_values.txt
@@ -136,13 +135,7 @@ class TradingParameters:
         # No more config.json override - browser and backtest both use the same source
     
     def _load_from_config(self):
-        """
-        Load parameter overrides from ``config.json`` when present.
-
-        Returns
-        -------
-        None
-        """
+        """Load parameters from config.json if it exists"""
         try:
             # Look for config.json in various locations
             possible_paths = [
@@ -197,19 +190,8 @@ class TradingParameters:
     
     def update_parameter(self, param_name, value):
         """
-        Set a parameter attribute dynamically.
-
-        Parameters
-        ----------
-        param_name : str
-            Attribute name to update.
-        value : Any
-            Value to assign to the parameter.
-
-        Returns
-        -------
-        bool
-            True when the attribute exists and was updated.
+        Dynamically update a parameter
+        Usage: params.update_parameter('Parameter_1', 150)
         """
         if hasattr(self, param_name):
             setattr(self, param_name, value)

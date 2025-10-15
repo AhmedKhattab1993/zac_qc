@@ -593,7 +593,7 @@
     },
     "job-organization-id": "14fa619b2f36d5c41aed5135b2c9ce39",
     "organization-id": "14fa619b2f36d5c41aed5135b2c9ce39",
-    "file-database-last-update": "10/14/2025 17:05:03",
+    "file-database-last-update": "07/16/2025 11:47:11",
     "data-downloader": "QuantConnect.Lean.DataSource.Polygon.PolygonDataDownloader",
     "id": "Local"
 }

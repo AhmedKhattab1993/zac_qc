@@ -4,23 +4,11 @@ from datetime import timedelta, time, datetime
 
 class TrailOrderManager:
     """
-    Emulate Interactive Brokers limit-trailing order behaviour.
-
-    Parameters
-    ----------
-    algorithm : Algorithm
-        Parent QCAlgorithm instance.
+    Complete implementation of LimitTrailOrder logic
+    Replicates Interactive Brokers LimitTrail order functionality
     """
     
     def __init__(self, algorithm):
-        """
-        Configure internal tracking structures for trail orders.
-
-        Parameters
-        ----------
-        algorithm : Algorithm
-            Parent QCAlgorithm instance.
-        """
         self.algorithm = algorithm
         self.params = algorithm.parameters
         
@@ -38,27 +26,15 @@ class TrailOrderManager:
     
     def PlaceStopTrailOrder(self, symbol, action, quantity, trail_stop_price, trailing_amount, condition):
         """
-        Submit a stop-trailing order following IB semantics.
-
-        Parameters
-        ----------
-        symbol : Symbol
-            Symbol to trade.
-        action : str
-            ``"BUY"`` or ``"SELL"`` action.
-        quantity : int
-            Order quantity in shares.
-        trail_stop_price : float
-            Initial trailing stop anchor.
-        trailing_amount : float
-            Trail amount expressed in price units.
-        condition : str
-            Triggering condition identifier.
-
-        Returns
-        -------
-        OrderTicket
-            Ticket for the newly submitted stop order.
+        Place a stop trail order with full IB logic
+        
+        Args:
+            symbol: Trading symbol
+            action: "BUY" or "SELL"  
+            quantity: Number of shares
+            trail_stop_price: Initial trail stop price
+            trailing_amount: Amount to trail by
+            condition: Trading condition (e.g., 'cond1', 'cond2', etc.)
         """
         
         # Place initial stop market order
@@ -89,11 +65,8 @@ class TrailOrderManager:
     
     def UpdateAllTrailOrders(self):
         """
-        Refresh all tracked trail orders if the throttle window has passed.
-
-        Returns
-        -------
-        None
+        Update all active trail orders - called every 15 seconds
+        Implements IB trail logic for entry orders
         """
         
         current_time = self.algorithm.Time
@@ -130,18 +103,7 @@ class TrailOrderManager:
             self.RemoveTrailOrder(order_id)
     
     def UpdateSingleTrailOrder(self, order_info):
-        """
-        Recalculate trail parameters for a single order.
-
-        Parameters
-        ----------
-        order_info : dict
-            Metadata dictionary stored when the trail was created.
-
-        Returns
-        -------
-        None
-        """
+        """Update individual trail order with exact IB logic"""
         
         symbol = order_info['symbol']
         current_price = self.algorithm.Securities[symbol].Price
@@ -216,36 +178,14 @@ class TrailOrderManager:
                 self.RemoveTrailOrder(order_info['ticket'].OrderId)
     
     def RemoveTrailOrder(self, order_id):
-        """
-        Remove a trail order from the active tracking cache.
-
-        Parameters
-        ----------
-        order_id : int
-            Order identifier assigned by QuantConnect.
-
-        Returns
-        -------
-        None
-        """
+        """Remove trail order from tracking"""
         if order_id in self.active_trail_orders:
             order_info = self.active_trail_orders[order_id]
             self.algorithm.Debug(f"Removed trail order: {order_info['symbol']} {order_info['action']}")
             del self.active_trail_orders[order_id]
     
     def CancelAllTrailOrders(self, symbol=None):
-        """
-        Cancel outstanding trail orders.
-
-        Parameters
-        ----------
-        symbol : Symbol, optional
-            Restrict cancellation to a single symbol.
-
-        Returns
-        -------
-        None
-        """
+        """Cancel all trail orders, optionally filtered by symbol"""
         
         orders_to_cancel = []
         

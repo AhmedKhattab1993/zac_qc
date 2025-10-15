@@ -4,14 +4,18 @@ from datetime import datetime, time, timedelta
 
 class RallyDetector:
     """
-    Evaluate rally momentum thresholds that gate condition execution.
-
-    Parameters
-    ----------
-    algorithm : Algorithm
-        Parent QCAlgorithm instance.
-    params : TradingParameters
-        Parameter container supplying rally thresholds.
+    Phase 3: Rally Detection System - MOMENTUM GATE FOR EXISTING CONDITIONS
+    
+    This module implements the 5-parameter rally detection system that acts as
+    a momentum gate for existing entry conditions. Rally detection ENHANCES
+    but does NOT replace the existing 4 entry conditions from previous phases.
+    
+    Parameters used:
+    - Rally_X_Min_PCT: Rally X minimum percentage (rally_x_min_pct)
+    - Rally_X_Max_PCT: Rally X maximum percentage (rally_x_max_pct)  
+    - Rally_Y_PCT: Rally Y percentage threshold (rally_y_pct)
+    - Rally_Time_Constraint: Rally time constraint in MINUTES (rally_x_rally_y_time_constraint)
+    - Rally_Time_Constraint_Threshold: Rally threshold multiplier (threshold)
     """
     
     def __init__(self, algorithm, params):
@@ -26,18 +30,8 @@ class RallyDetector:
     
     def update_price_data(self, symbol, bar_data):
         """
-        Store 15-second price data for use in rally calculations.
-
-        Parameters
-        ----------
-        symbol : str
-            Trading symbol identifier.
-        bar_data : TradeBar
-            Consolidated 15-second bar.
-
-        Returns
-        -------
-        None
+        Store 15-second price data for rally calculations
+        Called from main algorithm on each price update
         """
         timestamp = self.algorithm.Time
         
@@ -66,36 +60,12 @@ class RallyDetector:
             self.data_cache[symbol] = self.data_cache[symbol][-max_entries:]
     
     def is_market_hours(self, timestamp):
-        """
-        Determine whether a timestamp occurs during trading hours.
-
-        Parameters
-        ----------
-        timestamp : datetime.datetime
-            Timestamp to evaluate.
-
-        Returns
-        -------
-        bool
-            True when between 09:30 and 15:59 inclusive.
-        """
+        """Check if timestamp is within market hours (9:30 AM - 3:59 PM)"""
         current_time = timestamp.time()
         return self.market_open <= current_time <= self.market_close
     
     def filter_market_hours_data(self, symbol):
-        """
-        Retrieve cached 15-second bars for today's session.
-
-        Parameters
-        ----------
-        symbol : str
-            Trading symbol identifier.
-
-        Returns
-        -------
-        list[dict]
-            Sequence of cached bar dictionaries constrained to market hours.
-        """
+        """Filter cached data for today's market hours only and specific symbol"""
         current_date = self.algorithm.Time.date()
         
         # Return empty list if symbol not in cache
@@ -108,19 +78,11 @@ class RallyDetector:
     
     def check_long_rally_condition(self, symbol, metrics):
         """
-        Validate upward rally momentum for long conditions.
-
-        Parameters
-        ----------
-        symbol : str
-            Trading symbol identifier.
-        metrics : MetricsCalculator
-            Metrics calculator exposing range values.
-
-        Returns
-        -------
-        bool
-            True when the rally supports long entries.
+        Validate upward rally momentum for LONG conditions (C1, C2) - Reference implementation
+        
+        Matches Reference rally_condition() method exactly
+        
+        Returns: True if rally momentum supports LONG entry, False otherwise
         """
         try:
             # Filter 15-second data for market hours only (9:30-15:59) - HARDCODED like Reference
@@ -199,19 +161,11 @@ class RallyDetector:
     
     def check_short_rally_condition(self, symbol, metrics):
         """
-        Validate downward rally momentum for short conditions.
-
-        Parameters
-        ----------
-        symbol : str
-            Trading symbol identifier.
-        metrics : MetricsCalculator
-            Metrics calculator exposing range values.
-
-        Returns
-        -------
-        bool
-            True when the rally supports short entries.
+        Validate downward rally momentum for SHORT conditions (C4, C5) - Reference implementation
+        
+        Matches Reference rally_cond_short() method exactly
+        
+        Returns: True if rally momentum supports SHORT entry, False otherwise
         """
         try:
             # Filter 15-second data for market hours only (9:30-15:59) - HARDCODED like Reference
@@ -290,23 +244,14 @@ class RallyDetector:
     
     def validate_time_constraint_long(self, symbol, metrics, lowest_time, last_low_time):
         """
-        Enforce rally timing constraints for long entries.
-
-        Parameters
-        ----------
-        symbol : str
-            Trading symbol identifier.
-        metrics : MetricsCalculator
-            Metrics calculator exposing range multiples.
-        lowest_time : datetime.datetime
-            Timestamp of the lowest price in the rally.
-        last_low_time : datetime.datetime
-            Timestamp of the most recent low.
-
-        Returns
-        -------
-        bool
-            True when the rally duration satisfies configured thresholds.
+        Check rally timing requirements for LONG positions
+        Matches Reference lines 1149-1150: delta = last_low_date - lowest_date
+        
+        Args:
+            symbol: Trading symbol
+            metrics: Metrics calculator instance
+            lowest_time: Timestamp of the lowest price point
+            last_low_time: Timestamp of the most recent low
         """
         try:
             # Get metric_range_multiplier from metrics
@@ -336,23 +281,14 @@ class RallyDetector:
     
     def validate_time_constraint_short(self, symbol, metrics, highest_time, last_high_time):
         """
-        Enforce rally timing constraints for short entries.
-
-        Parameters
-        ----------
-        symbol : str
-            Trading symbol identifier.
-        metrics : MetricsCalculator
-            Metrics calculator exposing range multiples.
-        highest_time : datetime.datetime
-            Timestamp of the highest price in the rally.
-        last_high_time : datetime.datetime
-            Timestamp of the most recent high.
-
-        Returns
-        -------
-        bool
-            True when the rally duration satisfies configured thresholds.
+        Check rally timing requirements for SHORT positions
+        Matches Reference: delta = last_high_date - highest_date
+        
+        Args:
+            symbol: Trading symbol
+            metrics: Metrics calculator instance
+            highest_time: Timestamp of the highest price point
+            last_high_time: Timestamp of the most recent high
         """
         try:
             # Get metric_range_multiplier from metrics
@@ -381,31 +317,13 @@ class RallyDetector:
             return True  # Default to allowing if error
     
     def reset_daily_data(self):
-        """
-        Clear cached price data for the next trading session.
-
-        Returns
-        -------
-        None
-        """
+        """Reset rally detector for new trading day"""
         self.data_cache.clear()
         if self.algorithm.enable_logging:
             self.algorithm.Log(f"{self.algorithm.Time} - RallyDetector reset for new trading day")
     
     def get_rally_statistics(self, symbol):
-        """
-        Provide summary statistics for debugging rally behaviour.
-
-        Parameters
-        ----------
-        symbol : str
-            Trading symbol identifier.
-
-        Returns
-        -------
-        dict or None
-            Snapshot of highs/lows and data density.
-        """
+        """Get current rally statistics for debugging/monitoring"""
         market_data = self.filter_market_hours_data(symbol)
         
         if len(market_data) < 2:
@@ -425,19 +343,9 @@ class RallyDetector:
     
     def check_long_rally_with_reset(self, symbol, metrics):
         """
-        Evaluate long rally conditions and determine whether to reset state.
-
-        Parameters
-        ----------
-        symbol : str
-            Trading symbol identifier.
-        metrics : MetricsCalculator
-            Metrics calculator exposing range values.
-
-        Returns
-        -------
-        tuple[bool, bool]
-            Tuple of `(rally_result, reset_required)`.
+        Check rally condition and return reset flag for LONG conditions (Reference-style)
+        
+        Returns: (rally_result, reset_required)
         """
         try:
             # Filter 15-second data for market hours only
@@ -518,19 +426,9 @@ class RallyDetector:
     
     def check_short_rally_with_reset(self, symbol, metrics):
         """
-        Evaluate short rally conditions and determine whether to reset state.
-
-        Parameters
-        ----------
-        symbol : str
-            Trading symbol identifier.
-        metrics : MetricsCalculator
-            Metrics calculator exposing range values.
-
-        Returns
-        -------
-        tuple[bool, bool]
-            Tuple of `(rally_result, reset_required)`.
+        Check rally condition and return reset flag for SHORT conditions (Reference-style)
+        
+        Returns: (rally_result, reset_required)
         """
         try:
             # Filter 15-second data for market hours only
@@ -611,19 +509,9 @@ class RallyDetector:
     
     def should_reset_conditions_long(self, symbol, metrics):
         """
-        Decide whether long condition state should be reset due to momentum loss.
-
-        Parameters
-        ----------
-        symbol : str
-            Trading symbol identifier.
-        metrics : MetricsCalculator
-            Metrics calculator exposing range values.
-
-        Returns
-        -------
-        bool
-            True when conditions should reset.
+        Determine if LONG conditions should be reset based on rally deterioration
+        
+        Reference logic: Reset when rally momentum is lost or unfavorable
         """
         try:
             filtered = self.filter_market_hours_data(symbol)
@@ -651,19 +539,9 @@ class RallyDetector:
     
     def should_reset_conditions_short(self, symbol, metrics):
         """
-        Decide whether short condition state should be reset due to momentum loss.
-
-        Parameters
-        ----------
-        symbol : str
-            Trading symbol identifier.
-        metrics : MetricsCalculator
-            Metrics calculator exposing range values.
-
-        Returns
-        -------
-        bool
-            True when conditions should reset.
+        Determine if SHORT conditions should be reset based on rally deterioration
+        
+        Reference logic: Reset when rally momentum is lost or unfavorable
         """
         try:
             filtered = self.filter_market_hours_data(symbol)
