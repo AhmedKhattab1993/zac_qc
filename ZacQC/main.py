@@ -29,8 +29,12 @@ class ZacReferenceAlgorithm(QCAlgorithm):
         """Initialize the trading algorithm"""
         
         try:
-            # Enable/disable logging globally (set to False to reduce RAM consumption)
-            self.enable_logging = False
+            # Enable/disable verbose logging (defaults to disabled for performance)
+            debug_env = os.environ.get("ZACQC_ENABLE_DEBUG_LOGS")
+            if debug_env is not None:
+                self.enable_logging = debug_env.strip().lower() in ("1", "true", "yes", "on")
+            else:
+                self.enable_logging = False
 
             # Performance tracking setup - logs only when thresholds are exceeded
             self.performance_stats = {}
@@ -47,6 +51,11 @@ class ZacReferenceAlgorithm(QCAlgorithm):
             self._last_perf_summary_time = None
             self._perf_last_alert = {}
             self.performance_alert_cooldown = timedelta(seconds=30)
+            # Capture cumulative performance stats for end-of-run profiling
+            self.performance_cumulative = {}
+            self.performance_capture_enabled = True
+            self._perf_stage_order = tuple(self.performance_thresholds.keys())
+            self._perf_stage_index = {stage: idx for idx, stage in enumerate(self._perf_stage_order)}
             
             # Basic initialization
             if self.enable_logging:
@@ -54,6 +63,8 @@ class ZacReferenceAlgorithm(QCAlgorithm):
             
             # Load parameters
             self.parameters = TradingParameters()
+            if debug_env is None and hasattr(self.parameters, 'Enable_Debug_Logging'):
+                self.enable_logging = bool(getattr(self.parameters, 'Enable_Debug_Logging'))
             
             # Set algorithm basics - convert string dates to datetime objects
             start_date = datetime.strptime(self.parameters.start_date, "%Y-%m-%d")
@@ -91,6 +102,7 @@ class ZacReferenceAlgorithm(QCAlgorithm):
                 symbol_manager = SymbolManager(self, symbol_name, symbol)
                 symbol_manager.Initialize()
                 self.symbol_managers[symbol_name] = symbol_manager
+                self._initialize_performance_tracking(symbol_name)
                 
                 if self.enable_logging:
                     self.Log(f"Initialized SymbolManager for {symbol_name}")
@@ -133,6 +145,13 @@ class ZacReferenceAlgorithm(QCAlgorithm):
         """Main data processing method - handles multiple symbols"""
         
         try:
+            limit_active = False
+            if hasattr(self, 'risk_manager') and hasattr(self.risk_manager, 'CheckDailyPnLLimit'):
+                limit_active = self.risk_manager.CheckDailyPnLLimit()
+            if hasattr(self, 'risk_manager') and hasattr(self.risk_manager, 'daily_limit_reached'):
+                limit_active = limit_active or self.risk_manager.daily_limit_reached
+            self._daily_limit_active = limit_active
+
             # Process data for each symbol that has data
             for symbol_name, symbol_manager in self.symbol_managers.items():
                 symbol = self.symbols[symbol_name]
@@ -342,17 +361,65 @@ class ZacReferenceAlgorithm(QCAlgorithm):
     # ----------------------------------------------------------------------
     # Performance tracking helpers
     # ----------------------------------------------------------------------
+    def _initialize_performance_tracking(self, symbol_name):
+        """Pre-allocate lightweight performance slots for each symbol."""
+        if not hasattr(self, '_perf_stage_order'):
+            return
+
+        stage_count = len(self._perf_stage_order)
+        if stage_count == 0:
+            return
+
+        template = [[0.0, 0, 0.0] for _ in range(stage_count)]
+        if isinstance(getattr(self, 'performance_stats', None), dict):
+            self.performance_stats.setdefault(symbol_name, [stat[:] for stat in template])
+
+        if getattr(self, 'performance_capture_enabled', False):
+            self.performance_cumulative.setdefault(symbol_name, [stat[:] for stat in template])
+
     def record_performance(self, symbol, stage, duration):
         """Store stage duration and emit alerts/summaries when thresholds are hit"""
         if not hasattr(self, 'performance_stats'):
             return
 
         stage_threshold = self.performance_thresholds.get(stage, self.default_perf_threshold)
-        stats_by_symbol = self.performance_stats.setdefault(symbol, {})
-        stage_stats = stats_by_symbol.setdefault(stage, {'total': 0.0, 'count': 0, 'max': 0.0})
-        stage_stats['total'] += duration
-        stage_stats['count'] += 1
-        stage_stats['max'] = max(stage_stats['max'], duration)
+        idx = getattr(self, '_perf_stage_index', {}).get(stage)
+
+        if idx is None:
+            # Fallback for unexpected stages – retain previous dictionary behaviour
+            stats_by_symbol = self.performance_stats.setdefault(symbol, {})
+            stage_stats = stats_by_symbol.setdefault(stage, {'total': 0.0, 'count': 0, 'max': 0.0})
+            stage_stats['total'] += duration
+            stage_stats['count'] += 1
+            stage_stats['max'] = max(stage_stats['max'], duration)
+
+            if getattr(self, 'performance_capture_enabled', False):
+                cumulative_by_symbol = self.performance_cumulative.setdefault(symbol, {})
+                cumulative_stage = cumulative_by_symbol.setdefault(stage, {'total': 0.0, 'count': 0, 'max': 0.0})
+                cumulative_stage['total'] += duration
+                cumulative_stage['count'] += 1
+                cumulative_stage['max'] = max(cumulative_stage['max'], duration)
+        else:
+            stats_by_symbol = self.performance_stats.setdefault(
+                symbol,
+                [[0.0, 0, 0.0] for _ in self._perf_stage_order]
+            )
+            stage_stats = stats_by_symbol[idx]
+            stage_stats[0] += duration
+            stage_stats[1] += 1
+            if duration > stage_stats[2]:
+                stage_stats[2] = duration
+
+            if getattr(self, 'performance_capture_enabled', False):
+                cumulative_by_symbol = self.performance_cumulative.setdefault(
+                    symbol,
+                    [[0.0, 0, 0.0] for _ in self._perf_stage_order]
+                )
+                cumulative_stage = cumulative_by_symbol[idx]
+                cumulative_stage[0] += duration
+                cumulative_stage[1] += 1
+                if duration > cumulative_stage[2]:
+                    cumulative_stage[2] = duration
 
         # Emit immediate alert if we see a large spike (> 2x threshold) with cooldown
         if duration >= stage_threshold * 2:
@@ -386,25 +453,107 @@ class ZacReferenceAlgorithm(QCAlgorithm):
             return
 
         summary_parts = []
+        stage_order = getattr(self, '_perf_stage_order', ())
         for symbol, stages in self.performance_stats.items():
-            for stage, stats in stages.items():
-                count = stats.get('count', 0)
-                if count == 0:
-                    continue
+            if isinstance(stages, dict):
+                for stage, stats in stages.items():
+                    count = stats.get('count', 0)
+                    if count == 0:
+                        continue
 
-                avg_duration = stats['total'] / count
-                max_duration = stats['max']
-                threshold = self.performance_thresholds.get(stage, self.default_perf_threshold)
+                    avg_duration = stats['total'] / count
+                    max_duration = stats['max']
+                    threshold = self.performance_thresholds.get(stage, self.default_perf_threshold)
 
-                if max_duration >= threshold or avg_duration >= threshold:
-                    summary_parts.append(
-                        f"{symbol} {stage}: avg={avg_duration*1000:.1f} ms max={max_duration*1000:.1f} ms samples={count}"
-                    )
+                    if max_duration >= threshold or avg_duration >= threshold:
+                        summary_parts.append(
+                            f"{symbol} {stage}: avg={avg_duration*1000:.1f} ms max={max_duration*1000:.1f} ms samples={count}"
+                        )
 
-                # Reset for next interval regardless of whether we logged it to avoid stale data
-                stats['total'] = 0.0
-                stats['count'] = 0
-                stats['max'] = 0.0
+                    stats['total'] = 0.0
+                    stats['count'] = 0
+                    stats['max'] = 0.0
+            else:
+                for idx, stage in enumerate(stage_order):
+                    total, count, max_duration = stages[idx]
+                    if count == 0:
+                        stages[idx][0] = 0.0
+                        stages[idx][1] = 0
+                        stages[idx][2] = 0.0
+                        continue
+
+                    avg_duration = total / count
+                    threshold = self.performance_thresholds.get(stage, self.default_perf_threshold)
+
+                    if max_duration >= threshold or avg_duration >= threshold:
+                        summary_parts.append(
+                            f"{symbol} {stage}: avg={avg_duration*1000:.1f} ms max={max_duration*1000:.1f} ms samples={count}"
+                        )
+
+                    stages[idx][0] = 0.0
+                    stages[idx][1] = 0
+                    stages[idx][2] = 0.0
 
         if summary_parts:
-            self.Log("⏱️ PERF SUMMARY | " + " | ".join(summary_parts))
+                self.Log("⏱️ PERF SUMMARY | " + " | ".join(summary_parts))
+    def _emit_final_performance_report(self):
+        """Emit end-of-run performance summary using cumulative stats"""
+        if not getattr(self, 'performance_cumulative', None):
+            return
+
+        # Per-symbol breakdown
+        stage_order = getattr(self, '_perf_stage_order', ())
+        aggregate = {}
+
+        for symbol, stages in sorted(self.performance_cumulative.items()):
+            stage_parts = []
+            if isinstance(stages, dict):
+                iterable = sorted(stages.items())
+                for stage, stats in iterable:
+                    count = stats.get('count', 0)
+                    if count == 0:
+                        continue
+                    total = stats.get('total', 0.0)
+                    max_duration = stats.get('max', 0.0)
+                    avg_ms = (total / count) * 1000.0
+                    max_ms = max_duration * 1000.0
+                    stage_parts.append(f"{stage}=avg:{avg_ms:.2f}ms max:{max_ms:.2f}ms n={count}")
+
+                    agg_stats = aggregate.setdefault(stage, {'total': 0.0, 'count': 0, 'max': 0.0})
+                    agg_stats['total'] += total
+                    agg_stats['count'] += count
+                    agg_stats['max'] = max(agg_stats['max'], max_duration)
+            else:
+                for idx, stage in enumerate(stage_order):
+                    total, count, max_duration = stages[idx]
+                    if count == 0:
+                        continue
+                    avg_ms = (total / count) * 1000.0
+                    max_ms = max_duration * 1000.0
+                    stage_parts.append(f"{stage}=avg:{avg_ms:.2f}ms max:{max_ms:.2f}ms n={count}")
+
+                    agg_stats = aggregate.setdefault(stage, {'total': 0.0, 'count': 0, 'max': 0.0})
+                    agg_stats['total'] += total
+                    agg_stats['count'] += count
+                    agg_stats['max'] = max(agg_stats['max'], max_duration)
+
+            if stage_parts:
+                self.Log(f"PERF_FINAL {symbol} | " + " | ".join(stage_parts))
+
+        aggregate_parts = []
+        for stage, stats in sorted(aggregate.items()):
+            count = stats.get('count', 0)
+            if count == 0:
+                continue
+            avg_ms = (stats['total'] / count) * 1000.0
+            max_ms = stats['max'] * 1000.0
+            aggregate_parts.append(f"{stage}=avg:{avg_ms:.2f}ms max:{max_ms:.2f}ms n={count}")
+
+        if aggregate_parts:
+            self.Log("PERF_FINAL_AGG " + " | ".join(aggregate_parts))
+
+    def OnEndOfAlgorithm(self):
+        """Emit final performance summary when the algorithm finishes"""
+        if getattr(self, 'performance_capture_enabled', False):
+            self.Log("=== FINAL PERFORMANCE SUMMARY ===")
+            self._emit_final_performance_report()
