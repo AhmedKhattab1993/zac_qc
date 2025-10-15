@@ -1,5 +1,6 @@
 # symbol_manager.py - Basic Symbol Management for Reference Behavior
 from AlgorithmImports import *
+import time
 
 from data.data_manager import DataManager
 from data.metrics_calculator import MetricsCalculator
@@ -103,7 +104,10 @@ class SymbolManager:
         
         if self.symbol not in data or not data[self.symbol]:
             return
-        
+
+        perf_enabled = hasattr(self.algorithm, 'record_performance')
+        total_start = time.perf_counter() if perf_enabled else None
+
         try:
             # CRITICAL: Check P&L limit EVERY SECOND before any other processing
             # This ensures we catch limit breaches immediately, not just every 15 seconds
@@ -119,17 +123,46 @@ class SymbolManager:
                         return
             
             # Basic data processing (only continues every 15 seconds)
-            if not self.data_manager.OnData(data):
+            data_stage_start = time.perf_counter() if perf_enabled else None
+            data_ready = self.data_manager.OnData(data)
+            if perf_enabled and data_stage_start is not None:
+                self.algorithm.record_performance(
+                    self.symbol_name,
+                    'data_manager',
+                    time.perf_counter() - data_stage_start
+                )
+            if not data_ready:
+                if perf_enabled and total_start is not None:
+                    self.algorithm.record_performance(
+                        self.symbol_name,
+                        'total',
+                        time.perf_counter() - total_start
+                    )
                 return
             
             # Phase 3: Update rally detector with new price data
             if hasattr(self.conditions_checker, 'update_rally_data'):
+                rally_start = time.perf_counter() if perf_enabled else None
                 self.conditions_checker.update_rally_data(self.symbol_name, data[self.symbol])
+                if perf_enabled and rally_start is not None:
+                    self.algorithm.record_performance(
+                        self.symbol_name,
+                        'rally_update',
+                        time.perf_counter() - rally_start
+                    )
             
             # Calculate basic metrics
+            metrics_start = time.perf_counter() if perf_enabled else None
             metrics = self.metrics_calculator.CalculateAllMetrics(data)
+            if perf_enabled and metrics_start is not None:
+                self.algorithm.record_performance(
+                    self.symbol_name,
+                    'metrics',
+                    time.perf_counter() - metrics_start
+                )
             
             # Check gap threshold for all strategies (Reference implementation)
+            risk_checks_start = time.perf_counter() if perf_enabled else None
             for strategy in self.strategies:
                 strategy.check_gap_threshold(self.metrics_calculator)
             
@@ -140,9 +173,17 @@ class SymbolManager:
             # Check sharp movement threshold for all strategies (Reference implementation)
             for strategy in self.strategies:
                 strategy.check_sharp_movement_threshold(self.metrics_calculator)
+            if perf_enabled and risk_checks_start is not None:
+                self.algorithm.record_performance(
+                    self.symbol_name,
+                    'risk_checks',
+                    time.perf_counter() - risk_checks_start
+                )
             
             # Process each strategy
+            strategy_elapsed = 0.0
             for strategy in self.strategies:
+                strategy_loop_start = time.perf_counter() if perf_enabled else None
                 self.ProcessBasicStrategy(strategy, data, metrics)
                 
                 # Phase 3: Continuous VWAP monitoring for order cancellation
@@ -159,6 +200,22 @@ class SymbolManager:
                 
                 # ACTION TIME: Update trade time actions if enabled (Reference: ib.py lines 2882-2891)
                 self.update_trade_time_actions(data[self.symbol].Close)
+                
+                if perf_enabled and strategy_loop_start is not None:
+                    strategy_elapsed += time.perf_counter() - strategy_loop_start
+            
+            if perf_enabled:
+                self.algorithm.record_performance(
+                    self.symbol_name,
+                    'strategy_logic',
+                    strategy_elapsed
+                )
+                if total_start is not None:
+                    self.algorithm.record_performance(
+                        self.symbol_name,
+                        'total',
+                        time.perf_counter() - total_start
+                    )
                 
         except Exception as e:
             self.algorithm.Error(f"Error in OnData for {self.symbol_name}: {e}")
@@ -181,12 +238,6 @@ class SymbolManager:
         if hasattr(self.algorithm, 'risk_manager') and hasattr(self.algorithm.risk_manager, 'daily_limit_reached'):
             if self.algorithm.risk_manager.daily_limit_reached:
                 # Skip all condition checking if daily limit was already hit
-                return
-        
-        # Also do a fresh P&L check to catch the limit early
-        if hasattr(self.algorithm, 'risk_manager') and hasattr(self.algorithm.risk_manager, 'CheckDailyPnLLimit'):
-            if self.algorithm.risk_manager.CheckDailyPnLLimit():
-                # Daily limit just hit, skip processing
                 return
         
         # Check all conditions

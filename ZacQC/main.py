@@ -1,7 +1,7 @@
 from AlgorithmImports import *
 import sys
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # Add current directory to path for imports
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -31,6 +31,22 @@ class ZacReferenceAlgorithm(QCAlgorithm):
         try:
             # Enable/disable logging globally (set to False to reduce RAM consumption)
             self.enable_logging = False
+
+            # Performance tracking setup - logs only when thresholds are exceeded
+            self.performance_stats = {}
+            self.performance_thresholds = {
+                'data_manager': 0.02,     # 20 ms
+                'rally_update': 0.01,     # 10 ms
+                'metrics': 0.03,          # 30 ms
+                'risk_checks': 0.02,      # 20 ms
+                'strategy_logic': 0.04,   # 40 ms
+                'total': 0.06             # 60 ms end-to-end
+            }
+            self.default_perf_threshold = 0.05  # 50 ms fallback
+            self.performance_summary_interval = timedelta(minutes=1)
+            self._last_perf_summary_time = None
+            self._perf_last_alert = {}
+            self.performance_alert_cooldown = timedelta(seconds=30)
             
             # Basic initialization
             if self.enable_logging:
@@ -322,3 +338,73 @@ class ZacReferenceAlgorithm(QCAlgorithm):
             import traceback
             if self.enable_logging:
                 self.Log(f"Traceback: {traceback.format_exc()}")
+
+    # ----------------------------------------------------------------------
+    # Performance tracking helpers
+    # ----------------------------------------------------------------------
+    def record_performance(self, symbol, stage, duration):
+        """Store stage duration and emit alerts/summaries when thresholds are hit"""
+        if not hasattr(self, 'performance_stats'):
+            return
+
+        stage_threshold = self.performance_thresholds.get(stage, self.default_perf_threshold)
+        stats_by_symbol = self.performance_stats.setdefault(symbol, {})
+        stage_stats = stats_by_symbol.setdefault(stage, {'total': 0.0, 'count': 0, 'max': 0.0})
+        stage_stats['total'] += duration
+        stage_stats['count'] += 1
+        stage_stats['max'] = max(stage_stats['max'], duration)
+
+        # Emit immediate alert if we see a large spike (> 2x threshold) with cooldown
+        if duration >= stage_threshold * 2:
+            key = (symbol, stage)
+            now = getattr(self, 'Time', None)
+            if now is not None:
+                last_alert = self._perf_last_alert.get(key)
+                if last_alert is None or (now - last_alert) >= self.performance_alert_cooldown:
+                    self.Log(f"⚠️ PERF ALERT [{symbol}] stage={stage} duration={duration*1000:.1f} ms")
+                    self._perf_last_alert[key] = now
+
+        self._maybe_emit_performance_summary()
+
+    def _maybe_emit_performance_summary(self):
+        """Emit periodic summary with average/max timings"""
+        current_time = getattr(self, 'Time', None)
+        if current_time is None:
+            return
+
+        current_minute = current_time.replace(second=0, microsecond=0)
+        if self._last_perf_summary_time is not None:
+            if (current_minute - self._last_perf_summary_time) < self.performance_summary_interval:
+                return
+
+        self._last_perf_summary_time = current_minute
+        self._emit_performance_summary()
+
+    def _emit_performance_summary(self):
+        """Aggregate and log timing stats that exceed thresholds"""
+        if not self.performance_stats:
+            return
+
+        summary_parts = []
+        for symbol, stages in self.performance_stats.items():
+            for stage, stats in stages.items():
+                count = stats.get('count', 0)
+                if count == 0:
+                    continue
+
+                avg_duration = stats['total'] / count
+                max_duration = stats['max']
+                threshold = self.performance_thresholds.get(stage, self.default_perf_threshold)
+
+                if max_duration >= threshold or avg_duration >= threshold:
+                    summary_parts.append(
+                        f"{symbol} {stage}: avg={avg_duration*1000:.1f} ms max={max_duration*1000:.1f} ms samples={count}"
+                    )
+
+                # Reset for next interval regardless of whether we logged it to avoid stale data
+                stats['total'] = 0.0
+                stats['count'] = 0
+                stats['max'] = 0.0
+
+        if summary_parts:
+            self.Log("⏱️ PERF SUMMARY | " + " | ".join(summary_parts))
