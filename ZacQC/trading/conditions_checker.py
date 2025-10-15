@@ -1,5 +1,6 @@
 # conditions_checker.py - Basic Trading Conditions for Reference Behavior
 from AlgorithmImports import *
+from datetime import time as dt_time
 from management.rally_detector import RallyDetector
 
 class ConditionsChecker:
@@ -17,6 +18,13 @@ class ConditionsChecker:
         
         if self.algorithm.enable_logging:
             self.algorithm.Log(f"{self.algorithm.Time} - Basic ConditionsChecker initialized with Phase 3 Rally Detection")
+
+        # Cache for today's 15-second bars to avoid repeated window scans
+        self._market_open_time = dt_time(9, 30)
+        self._today_15s_cache = []
+        self._today_15s_cache_date = None
+        self._today_15s_cache_head_time = None
+        self._today_15s_cache_len = 0
     
     def update_rally_data(self, symbol, bar_data):
         """Update rally detector with new price data"""
@@ -25,6 +33,10 @@ class ConditionsChecker:
     def reset_daily_rally_data(self):
         """Reset rally detector for new trading day"""
         self.rally_detector.reset_daily_data()
+        self._today_15s_cache = []
+        self._today_15s_cache_date = None
+        self._today_15s_cache_head_time = None
+        self._today_15s_cache_len = 0
     
     def IsConditionEnabled(self, condition):
         """Check if specific condition is enabled via parameters"""
@@ -500,20 +512,41 @@ class ConditionsChecker:
         return self.rally_detector.check_short_rally_condition(symbol, self.algorithm.metrics_calculator)
     
     def _get_today_15s_bars(self):
-        """Get only today's 15-second bars starting from 9:30 AM"""
+        """Get only today's 15-second bars starting from 9:30 AM with per-bar caching."""
         bars_15s = self.algorithm.data_manager.bars_15s
+        if bars_15s.Count == 0:
+            return []
+
         current_date = self.algorithm.Time.date()
-        market_open = datetime.strptime("09:30", "%H:%M").time()
-        
+        latest_bar = bars_15s[0]
+        latest_time = latest_bar.Time
+
+        cache_valid = (
+            self._today_15s_cache_date == current_date and
+            self._today_15s_cache_head_time == latest_time and
+            self._today_15s_cache_len == bars_15s.Count
+        )
+        if cache_valid:
+            return self._today_15s_cache
+
         today_bars = []
-        for i in range(bars_15s.Count):
-            bar = bars_15s[i]
-            if bar.Time.date() == current_date and bar.Time.time() >= market_open:
-                today_bars.append(bar)
-        
-        # Reverse to get chronological order (oldest first)
-        today_bars.reverse()
-        return today_bars
+        for idx in range(bars_15s.Count - 1, -1, -1):
+            bar = bars_15s[idx]
+            bar_time = bar.Time
+
+            if bar_time.date() != current_date:
+                break  # Older day, stop scanning
+            if bar_time.time() < self._market_open_time:
+                continue
+
+            today_bars.append(bar)
+
+        self._today_15s_cache = today_bars
+        self._today_15s_cache_date = current_date
+        self._today_15s_cache_head_time = latest_time
+        self._today_15s_cache_len = bars_15s.Count
+
+        return self._today_15s_cache
     
     def __str__(self):
         """String representation"""

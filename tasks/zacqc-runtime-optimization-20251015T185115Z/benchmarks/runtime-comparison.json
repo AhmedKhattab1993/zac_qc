@@ -1,0 +1,13 @@
+{
+  "baseline_run_id": "1370479558",
+  "optimized_run_id": "1969908674",
+  "baseline_algo_runtime_s": 196.58,
+  "optimized_algo_runtime_s": 65.67,
+  "runtime_reduction_pct": 66.59375317936718,
+  "baseline_data_points_per_sec": 14000,
+  "optimized_data_points_per_sec": 43000,
+  "baseline_total_avg_ms": 0.06,
+  "optimized_total_avg_ms": 0.20,
+  "baseline_total_count": 2808000,
+  "optimized_total_count": 187185
+}
