@@ -1,0 +1,5 @@
+Experts/lean_unix_run.md:62: The Lean CLI provides a `lean data download` command to fetch data from QuantConnect’s Data Library. Data must follow the `data/<asset>/<market>/<resolution>/<symbol>/` structure.
+Experts/lean_unix_run.md:207: Example usage of Polygon credentials with Lean CLI flags (`--data-provider-historical Polygon`, `--polygon-api-key`).
+server/backtest_server.py:693-903: Current download flow shells out to `lean data download` per resolution, batching symbols, and checks for existing files in `data/equity/usa/second/<symbol>/<YYYYMMDD>_trade.zip` before downloading.
+server/backtest_server.py:380-438: `_check_data_availability` inspects second-level data by trading day using `USEquityTradingCalendar` to ensure completeness.
+lean.json:597: `polygon-api-key` stored in root config under `lean.json`.

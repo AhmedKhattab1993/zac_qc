@@ -200,6 +200,7 @@ Stop conditions: 3 loops without measurable progress, or time‑box exceeded →
 - Always scan local `experts/` and internal docs; capture relevant excerpts.
 - If local sources are insufficient, perform a brief, targeted web search before drafting the plan; integrate only essential findings into relevant plan sections (Constraints, Dependencies, Risks). No separate web‑research section is required.
 - Produce a structured Plan (Part 1) with multiple User Stories. Each story must include its own Implementation Plan, Execution Protocol, and Runbook & Logs; add a cross‑cutting Implementation Plan only if needed. Do not execute code in this phase.
+- Never add performance-improvement acceptance criteria or metrics unless the user explicitly requests them.
 - Emit an Expert Augmentation proposal if new guidance is warranted.
 
 ### Plan Flow & Clarification Gate
@@ -208,6 +209,7 @@ Stop conditions: 3 loops without measurable progress, or time‑box exceeded →
 
 ### Recommended Practices (baked into plan.md)
 - Testing
+  - Require a smoke test (live or end-to-end) in every user story whenever the feature can be validated via a quick real execution; list the exact command/spec under “Story Tests to Run”.
   - Prefer Playwright for E2E on web UIs; add `data-testid` attributes; keep tests deterministic; run headless in CI with JUnit/HTML reports.
   - Use fixtures for auth/data; stub external network calls; keep tests parallel‑safe.
 - Sub‑Agent Delegation (Codex CLI)
@@ -215,6 +217,7 @@ Stop conditions: 3 loops without measurable progress, or time‑box exceeded →
   - Specify inputs (AC, endpoints, mock data) and acceptance (files, paths, tests that must pass).
 - Data & Environments
   - Use `.env.test` and ephemeral resources; avoid PII in logs; ensure idempotent migrations/seeders.
+  - Proactively inspect config files, `.env` files, and JSON settings for available API keys or credentials needed to execute smoke tests, and reference their locations in the plan.
 - Reliability & Observability
   - Set timeouts/retries thoughtfully; add structured logs around critical paths; capture artifacts under `$FEATURE_DIR/runs/S-*/<RUN_ID>/`.
 
