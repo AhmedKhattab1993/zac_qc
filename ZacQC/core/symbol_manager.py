@@ -127,7 +127,10 @@ class SymbolManager:
                 )
             if not data_ready:
                 return
-            
+
+            if self._guard_time_short_circuit(perf_enabled, total_start):
+                return
+
             # Phase 3: Update rally detector with new price data
             if hasattr(self.conditions_checker, 'update_rally_data'):
                 rally_start = time.perf_counter() if perf_enabled else None
@@ -212,6 +215,65 @@ class SymbolManager:
         except Exception as e:
             self.algorithm.Error(f"Error in OnData for {self.symbol_name}: {e}")
     
+    def _guard_time_short_circuit(self, perf_enabled, total_start):
+        """Guard-time short circuit: exit early when algo window is closed with no work outstanding."""
+        if self.conditions_checker is None:
+            return False
+
+        checker = getattr(self.conditions_checker, 'is_entry_order_enabled', None)
+        if checker is None:
+            return False
+
+        current_time = self.algorithm.Time
+
+        # Only short-circuit when entry window is closed (guard window active)
+        if checker(current_time):
+            return False
+
+        if self._has_open_positions_or_pending_orders():
+            return False
+
+        if perf_enabled and total_start is not None:
+            self.algorithm.record_performance(
+                self.symbol_name,
+                'total',
+                time.perf_counter() - total_start
+            )
+
+        return True
+
+    def _has_open_positions_or_pending_orders(self):
+        """Check whether any state requires running the full pipeline."""
+        for strategy in self.strategies:
+            pending = getattr(strategy, 'pending_orders', None)
+            if pending and len(pending) > 0:
+                return True
+
+            active_positions = getattr(strategy, 'active_positions', None)
+            if active_positions:
+                for quantity in active_positions.values():
+                    if quantity:
+                        return True
+
+        if self.order_manager is not None:
+            local_quantity = self.order_manager.active_positions.get(self.symbol, 0)
+            if local_quantity:
+                return True
+
+            symbol_name = getattr(self.symbol, 'Value', str(self.symbol))
+            orders_sent = getattr(self.order_manager, 'orders_sent_this_cycle', set())
+            if symbol_name in orders_sent:
+                return True
+
+        if self.algorithm.Portfolio[self.symbol].Quantity != 0:
+            return True
+
+        open_orders = self.algorithm.Transactions.GetOpenOrders(self.symbol)
+        if len(open_orders) > 0:
+            return True
+
+        return False
+
     def ProcessBasicStrategy(self, strategy, data, metrics):
         """Process basic trading logic for strategy"""
         
