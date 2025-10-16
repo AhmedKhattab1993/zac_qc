@@ -25,6 +25,7 @@ class DataManager:
         self.hasNewBar = False
         self.data_fetch_success = True
         self.last_bar_time = datetime.min
+        self._processing_window_cache = {}
         
         # Daily values (will be calculated from bars)
         self.daily_high = 0
@@ -122,6 +123,27 @@ class DataManager:
         
         if self.algorithm.enable_logging:
             self.algorithm.Log("Basic data consolidators initialized")
+
+    def _get_processing_window(self, bar_time):
+        current_date = bar_time.date()
+        cached = self._processing_window_cache.get(current_date)
+        if cached:
+            return cached
+
+        warmup_start = datetime.combine(current_date, self.params.Algo_Off_Before) - timedelta(hours=4)
+        market_open_dt = datetime.combine(current_date, time(9, 30))
+        if warmup_start < market_open_dt:
+            warmup_start = market_open_dt
+
+        window_end = datetime.combine(current_date, self.params.Algo_Off_After)
+        window = (warmup_start, window_end)
+        # Cache only current day to avoid growth
+        self._processing_window_cache = {current_date: window}
+        return window
+
+    def _should_process_bar(self, bar_time):
+        start_dt, end_dt = self._get_processing_window(bar_time)
+        return start_dt <= bar_time <= end_dt
     
     def On15SecondBar(self, bar):
         """Handle 15-second bar updates - Reference behavior"""
@@ -130,15 +152,17 @@ class DataManager:
         if self.algorithm.enable_logging:
             # self.algorithm.Log(f"15s Bar {self.symbol}: {bar.Time} | O:{bar.Open:.2f} H:{bar.High:.2f} L:{bar.Low:.2f} C:{bar.Close:.2f} V:{bar.Volume}")
             pass
-        
+
+        # Basic VWAP calculation and daily updates (always needed)
+        self.UpdateVWAP(bar)
+        self.UpdateDailyValues(bar)
+
+        if not self._should_process_bar(bar.Time):
+            self.hasNewBar = False
+            return
+
         # Basic bar storage
         self.bars_15s.Add(bar)
-        
-        # Basic VWAP calculation
-        self.UpdateVWAP(bar)
-        
-        # Basic daily values update
-        self.UpdateDailyValues(bar)
         
         # Log current prices of active trailing orders every 15 seconds
         if self.symbol_manager and hasattr(self.symbol_manager, 'strategies'):

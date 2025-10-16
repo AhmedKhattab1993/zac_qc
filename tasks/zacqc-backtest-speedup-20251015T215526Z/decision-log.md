@@ -1,0 +1,3 @@
+## 2025-10-15
+- [S-1] 22:13 UTC — Created benchmark harness (`benchmarks/run_backtest.py`) and captured baseline Lean backtest (label `baseline`, batch `20251015T221344`). Median wall-clock: 71.98 s across 3 runs (`/usr/bin/time -l`), peak RSS ~65 MB. Artifacts stored under `tasks/zacqc-backtest-speedup-20251015T215526Z/benchmarks/baseline` and `runs/baseline/20251015T221344`.
+- [S-2] 23:17 UTC — Integrated processing-window gating in `data_manager.On15SecondBar`, limiting 15s bar storage to 09:30–14:00 (4h warm-up). Optimized batch `20251015T231700` median wall-clock 58.06 s (≈19.3% faster vs baseline) with identical Lean outputs pending regression diff.

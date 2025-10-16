@@ -39,12 +39,14 @@ class ZacReferenceAlgorithm(QCAlgorithm):
             # Performance tracking setup - logs only when thresholds are exceeded
             self.performance_stats = {}
             self.performance_thresholds = {
-                'data_manager': 0.02,     # 20 ms
-                'rally_update': 0.01,     # 10 ms
-                'metrics': 0.03,          # 30 ms
-                'risk_checks': 0.02,      # 20 ms
-                'strategy_logic': 0.04,   # 40 ms
-                'total': 0.06             # 60 ms end-to-end
+                'data_manager': 0.02,       # 20 ms
+                'rally_update': 0.01,       # 10 ms
+                'metrics': 0.03,            # 30 ms
+                'risk_checks': 0.02,        # 20 ms
+                'conditions_eval': 0.03,    # 30 ms for condition gating
+                'order_management': 0.03,   # 30 ms for order placement/maintenance
+                'strategy_logic': 0.04,     # 40 ms
+                'total': 0.06               # 60 ms end-to-end
             }
             self.default_perf_threshold = 0.05  # 50 ms fallback
             self.performance_summary_interval = timedelta(minutes=1)
@@ -56,6 +58,9 @@ class ZacReferenceAlgorithm(QCAlgorithm):
             self.performance_capture_enabled = True
             self._perf_stage_order = tuple(self.performance_thresholds.keys())
             self._perf_stage_index = {stage: idx for idx, stage in enumerate(self._perf_stage_order)}
+            # Fine-grained condition profiling helpers
+            self.condition_perf_enabled = True
+            self.condition_perf_stats = {}
             
             # Basic initialization
             if self.enable_logging:
@@ -433,6 +438,17 @@ class ZacReferenceAlgorithm(QCAlgorithm):
 
         self._maybe_emit_performance_summary()
 
+    def record_condition_perf(self, condition, duration):
+        """Accumulate per-condition timing metrics for diagnostics."""
+        if not getattr(self, 'condition_perf_enabled', False):
+            return
+
+        stats = self.condition_perf_stats.setdefault(condition, [0.0, 0, 0.0])
+        stats[0] += duration
+        stats[1] += 1
+        if duration > stats[2]:
+            stats[2] = duration
+
     def _maybe_emit_performance_summary(self):
         """Emit periodic summary with average/max timings"""
         current_time = getattr(self, 'Time', None)
@@ -557,3 +573,14 @@ class ZacReferenceAlgorithm(QCAlgorithm):
         if getattr(self, 'performance_capture_enabled', False):
             self.Log("=== FINAL PERFORMANCE SUMMARY ===")
             self._emit_final_performance_report()
+        if getattr(self, 'condition_perf_enabled', False) and getattr(self, 'condition_perf_stats', None):
+            parts = []
+            for condition, stats in sorted(self.condition_perf_stats.items()):
+                total, count, max_duration = stats
+                if count == 0:
+                    continue
+                avg_ms = (total / count) * 1000.0
+                max_ms = max_duration * 1000.0
+                parts.append(f"{condition}=avg:{avg_ms:.2f}ms max:{max_ms:.2f}ms n={count}")
+            if parts:
+                self.Log("PERF_CONDITIONS " + " | ".join(parts))

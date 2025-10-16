@@ -1,0 +1,3 @@
+experts/lean_python_perf.md: Correctness first. Never accept speed that changes fills or portfolio state. Keep a golden baseline backtest for diffing. Profile → change → re-measure. Use RollingWindow to maintain state; avoid repeated History() calls.
+experts/trading_perf.md: Confirm baseline metrics (bars/sec, latency, peak memory). Profile to find the top offenders. Hoist invariant work out of loops; cache high-hit pure computations.
+experts/lean_unix_run.md: Each `lean backtest` run writes results to `backtests/<timestamp>/` with `results.json`, logs, and charts for further analysis.

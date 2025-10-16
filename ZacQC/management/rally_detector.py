@@ -1,6 +1,17 @@
 # rally_detector.py - Phase 3: Rally Detection System
 from AlgorithmImports import *
+from dataclasses import dataclass
 from datetime import datetime, time, timedelta
+from itertools import islice
+
+@dataclass(slots=True)
+class RallySample:
+    """Lightweight container for rally detection samples."""
+    time: datetime
+    high: float
+    low: float
+    close: float
+    open: float
 
 class RallyDetector:
     """
@@ -24,9 +35,18 @@ class RallyDetector:
         self.data_cache = {}  # Store 15-second price data per symbol
         self.market_open = time(9, 30)  # 9:30 AM
         self.market_close = time(15, 59)  # 3:59 PM
-        # Keep up to four hours of 15-second samples in memory per symbol
-        self.max_entries = 4 * 60 * 4
+        # Keep a bounded window of 15-second samples tuned to rally constraints
+        window_minutes = max(float(params.Rally_Time_Constraint) * 4.0, 120.0)
+        self.max_entries = int(window_minutes * 4)  # 4 samples per minute
         self._state = {}
+        self._rally_x_min = params.Rally_X_Min_PCT / 100.0
+        self._rally_x_max = params.Rally_X_Max_PCT / 100.0
+        self._rally_y_threshold = params.Rally_Y_PCT / 100.0
+        self._time_constraint_threshold = params.Rally_Time_Constraint_Threshold
+        self._time_constraint_minutes = float(params.Rally_Time_Constraint)
+        self._prune_window = timedelta(minutes=window_minutes)
+        self._session_date = None
+        self._session_open_dt = None
         
         if self.algorithm.enable_logging:
             self.algorithm.Log(f"{self.algorithm.Time} - RallyDetector initialized - Phase 3 momentum gate system")
@@ -47,15 +67,15 @@ class RallyDetector:
             self.data_cache[symbol] = []
 
         cache = self.data_cache[symbol]
-        price_data = {
-            'symbol': symbol,
-            'time': timestamp,
-            'high': float(bar_data.High),
-            'low': float(bar_data.Low),
-            'close': float(bar_data.Close),
-            'open': float(bar_data.Open)
-        }
-        cache.append(price_data)
+        cache.append(
+            RallySample(
+                time=timestamp,
+                high=float(bar_data.High),
+                low=float(bar_data.Low),
+                close=float(bar_data.Close),
+                open=float(bar_data.Open)
+            )
+        )
         self._prune_symbol_cache(symbol)
         self._mark_dirty(symbol, timestamp)
     
@@ -66,8 +86,6 @@ class RallyDetector:
     
     def filter_market_hours_data(self, symbol):
         """Filter cached data for today's market hours only and specific symbol"""
-        current_date = self.algorithm.Time.date()
-        
         cache = self.data_cache.get(symbol)
         if not cache:
             return []
@@ -81,19 +99,23 @@ class RallyDetector:
         if not cache:
             return
 
-        current_date = self.algorithm.Time.date()
-        market_open_dt = datetime.combine(current_date, self.market_open)
-        cutoff_time = self.algorithm.Time - timedelta(hours=4)
+        now = self.algorithm.Time
+        current_date = now.date()
+        if self._session_date != current_date:
+            self._session_date = current_date
+            self._session_open_dt = datetime.combine(current_date, self.market_open)
 
-        # Drop stale samples from the front
+        open_dt = self._session_open_dt
+        cutoff_time = now - self._prune_window
+        threshold_time = open_dt if open_dt > cutoff_time else cutoff_time
+
         prune_count = 0
         for sample in cache:
-            if sample['time'].date() != current_date or sample['time'] < market_open_dt or sample['time'] < cutoff_time:
-                prune_count += 1
-            else:
+            if sample.time >= threshold_time and sample.time.date() == current_date:
                 break
+            prune_count += 1
 
-        if prune_count:
+        if prune_count > 0:
             del cache[:prune_count]
 
         # Enforce max length by removing oldest entries
@@ -149,62 +171,55 @@ class RallyDetector:
             long_state['result'] = False
             long_state['reset'] = False
             return long_state
-
-        # Find lowest point
-        lows = [(i, d['low'], d['time']) for i, d in enumerate(filtered)]
-        lowest_idx, lowest_price, lowest_time = min(lows, key=lambda x: x[1])
-        filtered_from_low = filtered[lowest_idx:]
-        if not filtered_from_low:
+        try:
+            lowest_idx, lowest_sample = min(
+                enumerate(filtered),
+                key=lambda item: item[1].low
+            )
+        except ValueError:
             long_state['computed_time'] = latest_time
             long_state['result'] = False
             long_state['reset'] = False
             return long_state
 
-        highs_after_low = [d['high'] for d in filtered_from_low]
-        highest_price = max(highs_after_low)
-        highest_time = next(d['time'] for d in filtered_from_low if d['high'] == highest_price)
+        lowest_price = lowest_sample.low
+        lowest_time = lowest_sample.time
+
+        slice_iter = enumerate(islice(filtered, lowest_idx, None), start=lowest_idx)
+        try:
+            highest_idx, highest_sample = max(
+                slice_iter,
+                key=lambda item: item[1].high
+            )
+        except ValueError:
+            long_state['computed_time'] = latest_time
+            long_state['result'] = False
+            long_state['reset'] = False
+            return long_state
+
+        highest_price = highest_sample.high
+        highest_time = highest_sample.time
+        last_sample = filtered[-1]
+        last_low = last_sample.low
+        last_low_time = last_sample.time
 
         rally_x = ((highest_price - lowest_price) * 100.0 / lowest_price) / metric_range_price
-        rally_x_min = self.params.Rally_X_Min_PCT / 100.0
-        rally_x_max = self.params.Rally_X_Max_PCT / 100.0
-        rally_x_condition = rally_x_min <= rally_x <= rally_x_max
+        rally_x_condition = self._rally_x_min <= rally_x <= self._rally_x_max
 
-        highest_idx_in_filtered = None
-        for i, d in enumerate(filtered_from_low):
-            if d['high'] == highest_price:
-                highest_idx_in_filtered = i
-                break
-
-        if highest_idx_in_filtered is None:
-            long_state['computed_time'] = latest_time
-            long_state['result'] = False
-            long_state['reset'] = False
-            return long_state
-
-        filtered_from_high = filtered_from_low[highest_idx_in_filtered:]
-        if not filtered_from_high:
-            long_state['computed_time'] = latest_time
-            long_state['result'] = False
-            long_state['reset'] = False
-            return long_state
-
-        last_low = filtered_from_high[-1]['low']
-        last_low_time = filtered_from_high[-1]['time']
         rally_y = abs((highest_price - last_low) * 100.0 / highest_price) / metric_range_price
-        rally_y_threshold = self.params.Rally_Y_PCT / 100.0
-        rally_y_condition = rally_y >= rally_y_threshold
+        rally_y_condition = rally_y >= self._rally_y_threshold
 
         time_constraint = self.validate_time_constraint_long(symbol, metrics, lowest_time, last_low_time)
 
         long_state['computed_time'] = latest_time
         long_state['result'] = rally_x_condition and rally_y_condition and time_constraint
-        long_state['reset'] = rally_x > rally_x_max
+        long_state['reset'] = rally_x > self._rally_x_max
 
         if self.algorithm.enable_logging:
             self.algorithm.Log(
                 f"{self.algorithm.Time} - RALLY LONG {symbol}: "
-                f"Rally X={rally_x:.3f} [need {rally_x_min:.3f}-{rally_x_max:.3f}] ({rally_x_condition}), "
-                f"Rally Y={rally_y:.3f} [need ≥{rally_y_threshold:.3f}] ({rally_y_condition}), "
+                f"Rally X={rally_x:.3f} [need {self._rally_x_min:.3f}-{self._rally_x_max:.3f}] ({rally_x_condition}), "
+                f"Rally Y={rally_y:.3f} [need ≥{self._rally_y_threshold:.3f}] ({rally_y_condition}), "
                 f"Time OK={time_constraint}, Reset={long_state['reset']}"
             )
 
@@ -234,60 +249,55 @@ class RallyDetector:
             short_state['reset'] = False
             return short_state
 
-        highs = [(i, d['high'], d['time']) for i, d in enumerate(filtered)]
-        highest_idx, highest_price, highest_time = max(highs, key=lambda x: x[1])
-        filtered_from_high = filtered[highest_idx:]
-        if not filtered_from_high:
+        try:
+            highest_idx, highest_sample = max(
+                enumerate(filtered),
+                key=lambda item: item[1].high
+            )
+        except ValueError:
             short_state['computed_time'] = latest_time
             short_state['result'] = False
             short_state['reset'] = False
             return short_state
 
-        lows_after_high = [d['low'] for d in filtered_from_high]
-        lowest_price = min(lows_after_high)
-        lowest_time = next(d['time'] for d in filtered_from_high if d['low'] == lowest_price)
+        highest_price = highest_sample.high
+        highest_time = highest_sample.time
+
+        slice_iter = enumerate(islice(filtered, highest_idx, None), start=highest_idx)
+        try:
+            lowest_idx, lowest_sample = min(
+                slice_iter,
+                key=lambda item: item[1].low
+            )
+        except ValueError:
+            short_state['computed_time'] = latest_time
+            short_state['result'] = False
+            short_state['reset'] = False
+            return short_state
+
+        lowest_price = lowest_sample.low
+        lowest_time = lowest_sample.time
+        last_sample = filtered[-1]
+        last_high = last_sample.high
+        last_high_time = last_sample.time
 
         rally_x = ((highest_price - lowest_price) * 100.0 / highest_price) / metric_range_price
-        rally_x_min = self.params.Rally_X_Min_PCT / 100.0
-        rally_x_max = self.params.Rally_X_Max_PCT / 100.0
-        rally_x_condition = rally_x_min <= rally_x <= rally_x_max
+        rally_x_condition = self._rally_x_min <= rally_x <= self._rally_x_max
 
-        lowest_idx_in_filtered = None
-        for i, d in enumerate(filtered_from_high):
-            if d['low'] == lowest_price:
-                lowest_idx_in_filtered = i
-                break
-
-        if lowest_idx_in_filtered is None:
-            short_state['computed_time'] = latest_time
-            short_state['result'] = False
-            short_state['reset'] = False
-            return short_state
-
-        filtered_from_low = filtered_from_high[lowest_idx_in_filtered:]
-        if not filtered_from_low:
-            short_state['computed_time'] = latest_time
-            short_state['result'] = False
-            short_state['reset'] = False
-            return short_state
-
-        last_high = filtered_from_low[-1]['high']
-        last_high_time = filtered_from_low[-1]['time']
         rally_y = abs((last_high - lowest_price) * 100.0 / lowest_price) / metric_range_price
-        rally_y_threshold = self.params.Rally_Y_PCT / 100.0
-        rally_y_condition = rally_y >= rally_y_threshold
+        rally_y_condition = rally_y >= self._rally_y_threshold
 
         time_constraint = self.validate_time_constraint_short(symbol, metrics, highest_time, last_high_time)
 
         short_state['computed_time'] = latest_time
         short_state['result'] = rally_x_condition and rally_y_condition and time_constraint
-        short_state['reset'] = rally_x > rally_x_max
+        short_state['reset'] = rally_x > self._rally_x_max
 
         if self.algorithm.enable_logging:
             self.algorithm.Log(
                 f"{self.algorithm.Time} - RALLY SHORT {symbol}: "
-                f"Rally X={rally_x:.3f} [need {rally_x_min:.3f}-{rally_x_max:.3f}] ({rally_x_condition}), "
-                f"Rally Y={rally_y:.3f} [need ≥{rally_y_threshold:.3f}] ({rally_y_condition}), "
+                f"Rally X={rally_x:.3f} [need {self._rally_x_min:.3f}-{self._rally_x_max:.3f}] ({rally_x_condition}), "
+                f"Rally Y={rally_y:.3f} [need ≥{self._rally_y_threshold:.3f}] ({rally_y_condition}), "
                 f"Time OK={time_constraint}, Reset={short_state['reset']}"
             )
 
@@ -339,11 +349,11 @@ class RallyDetector:
             metric_range_multiplier = metrics.metric_range_multiplier
             
             # Check if time constraint applies
-            if metric_range_multiplier > self.params.Rally_Time_Constraint_Threshold:
+            if metric_range_multiplier > self._time_constraint_threshold:
                 # Calculate actual rally duration from lowest to last low
                 delta = last_low_time - lowest_time
                 rally_duration_minutes = delta.total_seconds() / 60  # Convert to minutes
-                required_minutes = self.params.Rally_Time_Constraint  # Already in minutes
+                required_minutes = self._time_constraint_minutes  # Already in minutes
                 
                 if rally_duration_minutes < required_minutes:
                     if self.algorithm.enable_logging:
@@ -376,11 +386,11 @@ class RallyDetector:
             metric_range_multiplier = metrics.metric_range_multiplier
             
             # Check if time constraint applies
-            if metric_range_multiplier > self.params.Rally_Time_Constraint_Threshold:
+            if metric_range_multiplier > self._time_constraint_threshold:
                 # Calculate actual rally duration from highest to last high
                 delta = last_high_time - highest_time
                 rally_duration_minutes = delta.total_seconds() / 60  # Convert to minutes
-                required_minutes = self.params.Rally_Time_Constraint  # Already in minutes
+                required_minutes = self._time_constraint_minutes  # Already in minutes
                 
                 if rally_duration_minutes < required_minutes:
                     if self.algorithm.enable_logging:
@@ -411,15 +421,15 @@ class RallyDetector:
         if len(market_data) < 2:
             return None
             
-        lows = [d['low'] for d in market_data]
-        highs = [d['high'] for d in market_data]
+        lows = [d.low for d in market_data]
+        highs = [d.high for d in market_data]
         
         return {
             'data_points': len(market_data),
             'lowest': min(lows),
             'highest': max(highs),
-            'current_low': market_data[-1]['low'],
-            'current_high': market_data[-1]['high'],
+            'current_low': market_data[-1].low,
+            'current_high': market_data[-1].high,
             'duration_minutes': self.calculate_rally_duration()
         }
     
@@ -465,8 +475,8 @@ class RallyDetector:
                 
             # Check if recent price action shows rally deterioration
             recent_data = filtered[-5:]  # Last 5 data points
-            recent_lows = [d['low'] for d in recent_data]
-            recent_highs = [d['high'] for d in recent_data]
+            recent_lows = [d.low for d in recent_data]
+            recent_highs = [d.high for d in recent_data]
             
             # Check for significant downward trend in recent data
             if len(recent_data) >= 3:
@@ -495,8 +505,8 @@ class RallyDetector:
                 
             # Check if recent price action shows rally deterioration
             recent_data = filtered[-5:]  # Last 5 data points
-            recent_lows = [d['low'] for d in recent_data]
-            recent_highs = [d['high'] for d in recent_data]
+            recent_lows = [d.low for d in recent_data]
+            recent_highs = [d.high for d in recent_data]
             
             # Check for significant upward trend in recent data
             if len(recent_data) >= 3:

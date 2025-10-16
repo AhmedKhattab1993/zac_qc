@@ -1,6 +1,7 @@
 # conditions_checker.py - Basic Trading Conditions for Reference Behavior
 from AlgorithmImports import *
 from datetime import time as dt_time
+import time
 from management.rally_detector import RallyDetector
 
 class ConditionsChecker:
@@ -15,6 +16,9 @@ class ConditionsChecker:
         
         # Phase 3: Initialize Rally Detection System
         self.rally_detector = RallyDetector(algorithm, self.params)
+        self.metrics_calculator = getattr(algorithm, "metrics_calculator", None)
+        self._all_conditions = ('cond1', 'cond2', 'cond3', 'cond4', 'cond5')
+        self._active_conditions = self._compute_active_conditions()
         
         if self.algorithm.enable_logging:
             self.algorithm.Log(f"{self.algorithm.Time} - Basic ConditionsChecker initialized with Phase 3 Rally Detection")
@@ -37,22 +41,39 @@ class ConditionsChecker:
         self._today_15s_cache_date = None
         self._today_15s_cache_head_time = None
         self._today_15s_cache_len = 0
+
+    def _metrics(self):
+        metrics_calc = self.metrics_calculator
+        if metrics_calc is None:
+            metrics_calc = getattr(self.algorithm, "metrics_calculator", None)
+            self.metrics_calculator = metrics_calc
+        return metrics_calc
+
+    def _compute_active_conditions(self):
+        params = self.params
+        active = []
+        if getattr(params, 'C1', False):
+            active.append('cond1')
+        if getattr(params, 'C2', False):
+            active.append('cond2')
+        if getattr(params, 'C3', False):
+            active.append('cond3')
+        if getattr(params, 'C4', False):
+            active.append('cond4')
+        if getattr(params, 'C5', False):
+            active.append('cond5')
+        return tuple(active)
     
     def IsConditionEnabled(self, condition):
         """Check if specific condition is enabled via parameters"""
-        
-        condition_map = {
-            'cond1': self.params.C1,
-            'cond2': self.params.C2, 
-            'cond3': self.params.C3,
-            'cond4': self.params.C4,
-            'cond5': self.params.C5
-        }
-        
-        return condition_map.get(condition, False)
+        return condition in self._active_conditions
     
-    def CheckAllConditions(self, strategy, metrics):
+    def CheckAllConditions(self, strategy, metrics, current_time=None):
         """Check all trading conditions using Reference sequential state machine"""
+        if current_time is None:
+            current_time = self.algorithm.Time
+        
+        perf_enabled = getattr(self.algorithm, 'condition_perf_enabled', False)
         
         # Check risk manager validation first (including Max_Daily_PNL)
         if hasattr(self.algorithm, 'risk_manager'):
@@ -67,8 +88,8 @@ class ConditionsChecker:
                 }
         
         # Check if current time is before 15:59 (EOD liquidation time)
-        current_hour = self.algorithm.Time.hour
-        current_minute = self.algorithm.Time.minute
+        current_hour = current_time.hour
+        current_minute = current_time.minute
         
         # Convert to minutes for easier comparison
         current_minutes = current_hour * 60 + current_minute
@@ -85,38 +106,33 @@ class ConditionsChecker:
             }
         
         # Phase 3: Reference Sequential State Machine - conditions are checked individually
-        conditions = {}
-        for condition in ['cond1', 'cond2', 'cond3', 'cond4', 'cond5']:
-            # Check condition enablement
-            is_enabled = self.IsConditionEnabled(condition)
-            
-            if not is_enabled:
-                conditions[condition] = False
-                continue
-                
+        conditions = {condition: False for condition in self._all_conditions}
+        for condition in self._active_conditions:
+            cond_start = time.perf_counter() if perf_enabled else None
             # Check condition logic using sequential state machine
             if condition == 'cond1':
-                condition_met = self.CheckCondition1(metrics, strategy)
+                condition_met = self.CheckCondition1(metrics, strategy, current_time)
             elif condition == 'cond2':
-                condition_met = self.CheckCondition2(metrics, strategy)
+                condition_met = self.CheckCondition2(metrics, strategy, current_time)
             elif condition == 'cond3':
-                condition_met = self.CheckCondition3(metrics, strategy)
+                condition_met = self.CheckCondition3(metrics, strategy, current_time)
             elif condition == 'cond4':
-                condition_met = self.CheckCondition4(metrics, strategy)
+                condition_met = self.CheckCondition4(metrics, strategy, current_time)
             elif condition == 'cond5':
-                condition_met = self.CheckCondition5(metrics, strategy)
+                condition_met = self.CheckCondition5(metrics, strategy, current_time)
             else:
                 condition_met = False
-                
             conditions[condition] = condition_met
-        
+            if perf_enabled and cond_start is not None:
+                self.algorithm.record_condition_perf(condition, time.perf_counter() - cond_start)
+
         return conditions
     
-    def CheckCondition1(self, metrics, strategy):
+    def CheckCondition1(self, metrics, strategy, current_time):
         """Reference-accurate sequential state machine for Condition 1 (LONG)"""
         
         # Get current time for timing constraints
-        now = self.algorithm.Time
+        now = current_time
         
         # Phase 3: Pre-condition timing check (matches Reference pre_cond1)
         time_since_last = (now - strategy.get_last_execution_date('c1')).total_seconds()
@@ -127,16 +143,16 @@ class ConditionsChecker:
             return False  # Timing constraint not met
             
         # Phase 3: Entry order guard validation
-        if not self.is_entry_order_enabled():
+        if not self.is_entry_order_enabled(current_time):
             return False
             
         # Initialize rally condition result
         rally_cond = False
+        metrics_calc = self._metrics()
         
         # STEP 1: Check if basic condition should be evaluated (Reference sequential logic)
         if not strategy.get_condition_state('c1'):
             # Basic condition logic (FIRST STEP - matches Reference)
-            metrics_calc = self.algorithm.metrics_calculator
             metric_range_percfromopen = metrics.get('metric_range_percfromopen', 0)
             metric_range_price30DMA = metrics_calc.metric_range_price30DMA
             actual_p1 = metrics_calc.actual_p1  # Parameter_1 = 120
@@ -159,7 +175,7 @@ class ConditionsChecker:
             vwap_condition12 = self.check_vwap_condition_long()
             
             # Rally validation with reset logic (only call once)
-            rally_cond, reset = self.rally_detector.check_long_rally_with_reset(self.algorithm.symbol.Value, self.algorithm.metrics_calculator)
+            rally_cond, reset = self.rally_detector.check_long_rally_with_reset(self.algorithm.symbol.Value, metrics_calc)
             
             # Reset condition if rally indicates reset (matches Reference)
             if reset:
@@ -174,11 +190,14 @@ class ConditionsChecker:
                 vwap_condition12 and
                 pre_cond1)
     
-    def CheckCondition2(self, metrics, strategy):
+    def CheckCondition2(self, metrics, strategy, current_time):
         """Reference-accurate sequential state machine for Condition 2 (LONG)"""
         
         # Get current time for timing constraints
-        now = self.algorithm.Time
+        now = current_time
+        perf_enabled = getattr(self.algorithm, 'condition_perf_enabled', False)
+        branch_start = time.perf_counter() if perf_enabled else None
+        branch_key = 'cond2_prime'
         
         # Phase 3: Pre-condition timing check (matches Reference pre_cond2)
         time_since_last = (now - strategy.get_last_execution_date('c2')).total_seconds()
@@ -189,58 +208,47 @@ class ConditionsChecker:
             return False  # Timing constraint not met
             
         # Phase 3: Entry order guard validation
-        if not self.is_entry_order_enabled():
+        if not self.is_entry_order_enabled(current_time):
             return False
             
         # Initialize rally condition result
         rally_cond = False
+        metrics_calc = self._metrics()
         
-        # STEP 1: Check if basic condition should be evaluated (Reference sequential logic)
         if not strategy.get_condition_state('c2'):
-            # Basic condition logic (FIRST STEP - matches Reference)
-            metrics_calc = self.algorithm.metrics_calculator
             metric_range_price = metrics.get('metric_range_price', 0)
             metric_range_price30DMA = metrics_calc.metric_range_price30DMA
-            actual_p2 = metrics_calc.actual_p2  # Parameter_2 = 130
-            
+            actual_p2 = metrics_calc.actual_p2
+
             if metric_range_price30DMA is None or metric_range_price30DMA <= 0:
                 return False
-            
-            # Get today's 15-second bars only (matches Reference lines 1273-1275)
+
             today_bars = self._get_today_15s_bars()
             if len(today_bars) < 3:
                 return False
-                
-            # Reference logic: second-to-last low < all previous lows (new low condition)
-            second_last_low = today_bars[-2].Low  # [-2] in Reference
-            previous_lows = [bar.Low for bar in today_bars[:-2]]  # [:-2] in Reference
-            
+
+            second_last_low = today_bars[-2].Low
+            previous_lows = [bar.Low for bar in today_bars[:-2]]
+
             if len(previous_lows) == 0:
                 return False
-                
+
             new_low_condition = second_last_low < min(previous_lows)
-            
-            # Exact Reference Parameter_2 logic replication
+
             p2_threshold = (actual_p2 / 100.0) * metric_range_price30DMA
             range_condition = metric_range_price >= p2_threshold
-            
-            # Both conditions must be true
+
             condition_triggered = new_low_condition and range_condition
-            
+
             if condition_triggered:
                 strategy.set_condition_state('c2', True)
                 if self.algorithm.enable_logging:
                     self.algorithm.Log(f"{self.algorithm.Time} - Condition 2 TRIGGERED {self.algorithm.symbol.Value} - New Low: {new_low_condition}, Range: {range_condition} - Now monitoring for rally/VWAP")
-                
-        # STEP 2: If condition is active, monitor rally + VWAP (SECOND STEP)
-        else:  # strategy.c2 is already True
-            # VWAP validation for LONG (matches Reference vwap_condition12)
+
+        else:
+            branch_key = 'cond2_active'
             vwap_condition12 = self.check_vwap_condition_long()
-            
-            # Rally validation with reset logic (only call once)
-            rally_cond, reset = self.rally_detector.check_long_rally_with_reset(self.algorithm.symbol.Value, self.algorithm.metrics_calculator)
-            
-            # Reset condition if rally indicates reset (matches Reference)
+            rally_cond, reset = self.rally_detector.check_long_rally_with_reset(self.algorithm.symbol.Value, metrics_calc)
             if reset:
                 strategy.reset_condition_state('c2')
                 if self.algorithm.enable_logging:
@@ -248,16 +256,21 @@ class ConditionsChecker:
                 
         # STEP 3: Final execution check (all must be True simultaneously - matches Reference)
         # Use the rally_cond result from above instead of calling again
-        return (strategy.get_condition_state('c2') and 
-                rally_cond and
-                vwap_condition12 and
-                pre_cond2)
+        result = (strategy.get_condition_state('c2') and 
+                  rally_cond and
+                  vwap_condition12 and
+                  pre_cond2)
+
+        if perf_enabled and branch_start is not None:
+            self.algorithm.record_condition_perf(branch_key, time.perf_counter() - branch_start)
+
+        return result
     
-    def CheckCondition3(self, metrics, strategy):
+    def CheckCondition3(self, metrics, strategy, current_time):
         """Reference-accurate sequential state machine for Condition 3 (NEUTRAL)"""
         
         # Get current time for timing constraints
-        now = self.algorithm.Time
+        now = current_time
         
         # Phase 3: Pre-condition timing check (matches Reference pre_cond3)
         time_since_last = (now - strategy.get_last_execution_date('c3')).total_seconds()
@@ -268,11 +281,11 @@ class ConditionsChecker:
             return False  # Timing constraint not met
             
         # Phase 3: Entry order guard validation
-        if not self.is_entry_order_enabled():
+        if not self.is_entry_order_enabled(current_time):
             return False
             
         # Condition 3 is simpler - no rally/VWAP requirements (matches Reference)
-        metrics_calc = self.algorithm.metrics_calculator
+        metrics_calc = self._metrics()
         
         # Calculate mdp (max down percentage in last 1800 seconds - exact Reference)
         mdp = metrics_calc.CalculateMaxDownPercentage(1800)
@@ -289,11 +302,11 @@ class ConditionsChecker:
         
         return condition_result
     
-    def CheckCondition4(self, metrics, strategy):
+    def CheckCondition4(self, metrics, strategy, current_time):
         """Reference-accurate sequential state machine for Condition 4 (SHORT)"""
         
         # Get current time for timing constraints
-        now = self.algorithm.Time
+        now = current_time
         
         # Phase 3: Pre-condition timing check (matches Reference pre_cond4)
         time_since_last = (now - strategy.get_last_execution_date('c4')).total_seconds()
@@ -304,16 +317,16 @@ class ConditionsChecker:
             return False  # Timing constraint not met
             
         # Phase 3: Entry order guard validation
-        if not self.is_entry_order_enabled():
+        if not self.is_entry_order_enabled(current_time):
             return False
             
         # Initialize rally condition result
         rally_cond_short = False
+        metrics_calc = self._metrics()
         
         # STEP 1: Check if basic condition should be evaluated (Reference sequential logic)
         if not strategy.get_condition_state('c4'):
             # Basic condition logic (FIRST STEP - matches Reference)
-            metrics_calc = self.algorithm.metrics_calculator
             metric_range_percfromopen = metrics.get('metric_range_percfromopen', 0)
             metric_range_price30DMA = metrics_calc.metric_range_price30DMA
             actual_p1 = metrics_calc.actual_p1  # Parameter_1 = 120
@@ -336,7 +349,7 @@ class ConditionsChecker:
             vwap_condition45 = self.check_vwap_condition_short()
             
             # Rally validation with reset logic (only call once)
-            rally_cond_short, reset = self.rally_detector.check_short_rally_with_reset(self.algorithm.symbol.Value, self.algorithm.metrics_calculator)
+            rally_cond_short, reset = self.rally_detector.check_short_rally_with_reset(self.algorithm.symbol.Value, metrics_calc)
             
             # Reset condition if rally indicates reset (matches Reference)
             if reset:
@@ -351,12 +364,15 @@ class ConditionsChecker:
                 vwap_condition45 and
                 pre_cond4)
     
-    def CheckCondition5(self, metrics, strategy):
+    def CheckCondition5(self, metrics, strategy, current_time):
         """Reference-accurate sequential state machine for Condition 5 (SHORT)"""
         
         # Get current time for timing constraints
-        now = self.algorithm.Time
-        
+        now = current_time
+        perf_enabled = getattr(self.algorithm, 'condition_perf_enabled', False)
+        branch_start = time.perf_counter() if perf_enabled else None
+        branch_key = 'cond5_prime'
+
         # Phase 3: Pre-condition timing check (matches Reference pre_cond5)
         time_since_last = (now - strategy.get_last_execution_date('c5')).total_seconds()
         required_cooldown = strategy.cfg.SameConditionTimeC5 * 60  # Convert minutes to seconds
@@ -366,75 +382,68 @@ class ConditionsChecker:
             return False  # Timing constraint not met
             
         # Phase 3: Entry order guard validation
-        if not self.is_entry_order_enabled():
+        if not self.is_entry_order_enabled(current_time):
             return False
             
         # Initialize rally condition result
         rally_cond_short = False
+        metrics_calc = self._metrics()
         
-        # STEP 1: Check if basic condition should be evaluated (Reference sequential logic)
         if not strategy.get_condition_state('c5'):
-            # Basic condition logic (FIRST STEP - matches Reference)
-            metrics_calc = self.algorithm.metrics_calculator
             metric_range_price = metrics.get('metric_range_price', 0)
             metric_range_price30DMA = metrics_calc.metric_range_price30DMA
-            actual_p2 = metrics_calc.actual_p2  # Parameter_2 = 130
-            
+            actual_p2 = metrics_calc.actual_p2
+
             if metric_range_price30DMA is None or metric_range_price30DMA <= 0:
                 return False
-            
-            # Get today's 15-second bars only (matches Reference lines 1306-1308)
+
             today_bars = self._get_today_15s_bars()
             if len(today_bars) < 3:
                 return False
-            
-            # Reference logic: second-to-last high > all previous highs (new high condition)
-            second_last_high = today_bars[-2].High  # [-2] in Reference
-            previous_highs = [bar.High for bar in today_bars[:-2]]  # [:-2] in Reference
-            
+
+            second_last_high = today_bars[-2].High
+            previous_highs = [bar.High for bar in today_bars[:-2]]
+
             if len(previous_highs) == 0:
                 return False
-                
+
             new_high_condition = second_last_high > max(previous_highs)
-            
-            # Exact Reference Parameter_2 logic replication
+
             p2_threshold = (actual_p2 / 100.0) * metric_range_price30DMA
             range_condition = metric_range_price >= p2_threshold
-            
-            # Both conditions must be true
+
             condition_triggered = new_high_condition and range_condition
-            
+
             if condition_triggered:
                 strategy.set_condition_state('c5', True)
                 if self.algorithm.enable_logging:
                     self.algorithm.Log(f"{self.algorithm.Time} - Condition 5 TRIGGERED {self.algorithm.symbol.Value} - New High: {new_high_condition}, Range: {range_condition} - Now monitoring for rally/VWAP")
-                
-        # STEP 2: If condition is active, monitor rally + VWAP (SECOND STEP)
-        else:  # strategy.c5 is already True
-            # VWAP validation for SHORT (matches Reference vwap_condition45)
+
+        else:
+            branch_key = 'cond5_active'
             vwap_condition45 = self.check_vwap_condition_short()
-            
-            # Rally validation with reset logic (only call once)
-            rally_cond_short, reset = self.rally_detector.check_short_rally_with_reset(self.algorithm.symbol.Value, self.algorithm.metrics_calculator)
-            
-            # Reset condition if rally indicates reset (matches Reference)
+            rally_cond_short, reset = self.rally_detector.check_short_rally_with_reset(self.algorithm.symbol.Value, metrics_calc)
             if reset:
                 strategy.reset_condition_state('c5')
                 if self.algorithm.enable_logging:
                     self.algorithm.Log(f"{self.algorithm.Time} - Condition 5 RESET {self.algorithm.symbol.Value} - Rally conditions failed")
-                
-        # STEP 3: Final execution check (all must be True simultaneously - matches Reference)
-        # Use the rally_cond_short result from above instead of calling again
-        return (strategy.get_condition_state('c5') and 
+
+        result = (strategy.get_condition_state('c5') and 
                 rally_cond_short and
                 vwap_condition45 and
                 pre_cond5)
+
+        if perf_enabled and branch_start is not None:
+            self.algorithm.record_condition_perf(branch_key, time.perf_counter() - branch_start)
+
+        return result
     
-    def is_entry_order_enabled(self):
+    def is_entry_order_enabled(self, current_time=None):
         """Check if current time is within entry order guard window (using Algo_Off_Before/After)"""
-        # Get current hour and minute from algorithm time
-        current_hour = self.algorithm.Time.hour
-        current_minute = self.algorithm.Time.minute
+        if current_time is None:
+            current_time = self.algorithm.Time
+        current_hour = current_time.hour
+        current_minute = current_time.minute
         
         # Use Algo_Off_Before and Algo_Off_After (frontend configurable guard times)
         guard_start = self.params.Algo_Off_Before
@@ -453,8 +462,9 @@ class ConditionsChecker:
         Uses HARD threshold (no margin) matching Reference/ib.py lines 1262-1263, 1280-1281
         """
         try:
-            vwap_price = self.algorithm.metrics_calculator.metric_vwap_price
-            range_price_7dma = self.algorithm.metrics_calculator.metric_range_price7DMA
+            metrics_calc = self._metrics()
+            vwap_price = metrics_calc.metric_vwap_price
+            range_price_7dma = metrics_calc.metric_range_price7DMA
             vwap_pct = self.params.VWAP_PCT
             
             if vwap_price is None or range_price_7dma is None:
@@ -480,8 +490,9 @@ class ConditionsChecker:
         Uses HARD threshold (no margin) matching Reference/ib.py lines 1295-1296, 1313-1314
         """
         try:
-            vwap_price = self.algorithm.metrics_calculator.metric_vwap_price
-            range_price_7dma = self.algorithm.metrics_calculator.metric_range_price7DMA
+            metrics_calc = self._metrics()
+            vwap_price = metrics_calc.metric_vwap_price
+            range_price_7dma = metrics_calc.metric_range_price7DMA
             vwap_pct = self.params.VWAP_PCT
             
             if vwap_price is None or range_price_7dma is None:
@@ -504,13 +515,14 @@ class ConditionsChecker:
     def check_rally_condition_long(self):
         """Check rally condition for LONG positions (wrapper)"""
         symbol = self.algorithm.symbol.Value
-        return self.rally_detector.check_long_rally_condition(symbol, self.algorithm.metrics_calculator)
+        return self.rally_detector.check_long_rally_condition(symbol, self._metrics())
         
     def check_rally_condition_short(self):
         """Check rally condition for SHORT positions (wrapper)"""
         symbol = self.algorithm.symbol.Value
-        return self.rally_detector.check_short_rally_condition(symbol, self.algorithm.metrics_calculator)
-    
+        return self.rally_detector.check_short_rally_condition(symbol, self._metrics())
+
+
     def _get_today_15s_bars(self):
         """Get only today's 15-second bars starting from 9:30 AM with per-bar caching."""
         bars_15s = self.algorithm.data_manager.bars_15s

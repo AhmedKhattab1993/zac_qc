@@ -130,6 +130,9 @@ class TradingParameters:
         self.start_date = "2025-10-01" # Backtest start date
         self.end_date = "2025-10-10" # Backtest end date
         self.account_id = "DU3166840"       # Account ID for trading
+
+        # Optional diagnostics
+        self.Enable_Debug_Logging = False  # Toggle high-volume algorithm logging
         
         # REMOVED: _load_from_config() - Now uses ONLY hardcoded values from parameters.py
         # No more config.json override - browser and backtest both use the same source

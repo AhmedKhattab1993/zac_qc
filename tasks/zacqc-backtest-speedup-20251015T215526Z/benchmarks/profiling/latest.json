@@ -1,0 +1,79 @@
+{
+  "label": "profiling",
+  "batch_id": "20251015T235940",
+  "project": "/Users/ahmedkhattab/Desktop/Projects/Zac/zac_qc/ZacQC",
+  "runs_dir": "/Users/ahmedkhattab/Desktop/Projects/Zac/zac_qc/tasks/zacqc-backtest-speedup-20251015T215526Z/runs/profiling/20251015T235940",
+  "single_core": "Single-core affinity not available on this host; set environment NUM_*_THREADS=1 for libraries (applied) and documented limitation.",
+  "summary": {
+    "runs": 1,
+    "wall_time_seconds": {
+      "min": 60.98,
+      "max": 60.98,
+      "median": 60.98,
+      "mean": 60.98
+    }
+  },
+  "runs": [
+    {
+      "run_index": 1,
+      "started_at_utc": "2025-10-16T00:00:41.190139Z",
+      "exit_code": 0,
+      "timing": {
+        "raw_log_path": "/Users/ahmedkhattab/Desktop/Projects/Zac/zac_qc/tasks/zacqc-backtest-speedup-20251015T215526Z/runs/profiling/20251015T235940/run_01/time.txt",
+        "raw_lines": [
+          "       60.98 real         0.34 user         0.12 sys",
+          "            63717376  maximum resident set size",
+          "                   0  average shared memory size",
+          "                   0  average unshared data size",
+          "                   0  average unshared stack size",
+          "                6401  page reclaims",
+          "                 160  page faults",
+          "                   0  swaps",
+          "                   0  block input operations",
+          "                   0  block output operations",
+          "                 160  messages sent",
+          "                 268  messages received",
+          "                   0  signals received",
+          "                 682  voluntary context switches",
+          "                1225  involuntary context switches",
+          "          3273553777  instructions retired",
+          "          1294901736  cycles elapsed",
+          "            45418368  peak memory footprint"
+        ],
+        "real_time_seconds": 60.98,
+        "user_time_seconds": 0.34,
+        "sys_time_seconds": 0.12,
+        "maximum_resident_set_size": 63717376,
+        "average_shared_memory_size": 0,
+        "average_unshared_data_size": 0,
+        "average_unshared_stack_size": 0,
+        "page_reclaims": 6401,
+        "page_faults": 160,
+        "swaps": 0,
+        "block_input_operations": 0,
+        "block_output_operations": 0,
+        "messages_sent": 160,
+        "messages_received": 268,
+        "signals_received": 0,
+        "voluntary_context_switches": 682,
+        "involuntary_context_switches": 1225,
+        "instructions_retired": 3273553777,
+        "cycles_elapsed": 1294901736,
+        "peak_memory_footprint": 45418368,
+        "python_wall_time_seconds": 60.98992099997122
+      },
+      "stdout_log": "/Users/ahmedkhattab/Desktop/Projects/Zac/zac_qc/tasks/zacqc-backtest-speedup-20251015T215526Z/runs/profiling/20251015T235940/run_01/lean.stdout.log",
+      "stderr_log": "/Users/ahmedkhattab/Desktop/Projects/Zac/zac_qc/tasks/zacqc-backtest-speedup-20251015T215526Z/runs/profiling/20251015T235940/run_01/lean.stderr.log",
+      "lean_output_dir": "/Users/ahmedkhattab/Desktop/Projects/Zac/zac_qc/tasks/zacqc-backtest-speedup-20251015T215526Z/runs/profiling/20251015T235940/run_01/lean-output",
+      "summary_path": "/Users/ahmedkhattab/Desktop/Projects/Zac/zac_qc/tasks/zacqc-backtest-speedup-20251015T215526Z/runs/profiling/20251015T235940/run_01/summary.json",
+      "order_events_path": "/Users/ahmedkhattab/Desktop/Projects/Zac/zac_qc/tasks/zacqc-backtest-speedup-20251015T215526Z/runs/profiling/20251015T235940/run_01/order-events.json",
+      "lean_log_path": "/Users/ahmedkhattab/Desktop/Projects/Zac/zac_qc/tasks/zacqc-backtest-speedup-20251015T215526Z/runs/profiling/20251015T235940/run_01/lean.log.txt"
+    }
+  ],
+  "baseline_comparison": {
+    "baseline_median": 71.98,
+    "current_median": 60.98,
+    "speedup_pct": 15.282022784106708,
+    "meets_target": false
+  }
+}
