@@ -33,7 +33,7 @@ This single file has two clearly separated parts:
 - Derive `FEATURE_TITLE` and slug → create `tasks/<slug>-<UTC>`.
 - Copy the Plan Template block (Part 1) into `plan.md`.
 - Follow the Agent Guide (Part 2): Bootstrap → quick research (local first, then web if needed) → draft and finalize plan with multiple User Stories (each with its own Implementation Plan, Execution Protocol, and Runbook & Logs; add a cross‑cutting Implementation Plan if needed).
-- Keep logs/artifacts under the feature folder; update Decision Log during implementation (per the plan).
+- Keep logs/artifacts under the feature folder; on every loop update: Decision Log, Tasks Checklist statuses, referenced expertise, and proposed expert additions (when gaps appear).
 
 ---
 
@@ -67,13 +67,16 @@ Copy everything between the BEGIN/END markers into your `plan.md`, then fill it 
 - Reliability/Availability: <SLO/SLA>
 - Observability: <logs/metrics/traces you’ll emit>
 - Cost: <budget guardrail>
+- E2E Runtime Budgets: <total ≤ X min; per‑spec ≤ Y sec; flakiness ≤ Z%>
 
 ## Dependencies
 - Internal: <modules/services>
 - External: <APIs/SDKs/infra>
 
 ## User Stories
-Duplicate the following story block for each user story in scope. Execute the closed loop per story; move to the next only after the current story meets its DoD.
+Duplicate the following story block for each user story in scope. Execute the closed loop per story; NEVER proceed to the next story unless the current story’s Acceptance Criteria (AC) are satisfied and evidenced. Do not advance based solely on partial work; the story must also meet its DoD.
+
+Note — Never‑Stop Continuity: Unless a blocking condition occurs, do not stop execution. After completing a story’s Exit Checklist, immediately begin the next story and continue until all User Stories are finished. Allowed pauses: `NEEDS_CLARIFICATION`, `BLOCKED`, time‑box reached, or 3 loops without measurable progress. When pausing, append a Decision Log entry and state the blocker explicitly.
 
 ### Story [S-1]: <short, actionable title>
 - Story ID: S-1 | Priority: <P0/P1/P2> | Owner: <name> | Due: <date>
@@ -96,10 +99,23 @@ Duplicate the following story block for each user story in scope. Execute the cl
 
 #### Story Tests to Run
 - Unit/Integration: <exact commands or test files>
-- E2E (Playwright, if applicable): `npx playwright test tests/e2e/<story>.spec.ts`
+- E2E (Playwright, if applicable):
+  - Fast: `E2E_MODE=fast npx playwright test tests/e2e/<story>.spec.ts -g "@smoke" --workers=2 --retries=1 --timeout=30000`
+  - Monitoring: `(/usr/bin/time -v || time -lp) npx playwright test ... 2>&1 | tee "$FEATURE_DIR/runs/S-1/<RUN_ID>/stdout.log"`
+  - Budget: finish ≤ 60 s for this story’s spec; if exceeded, adjust params or raise `BLOCKED` with evidence.
 
 #### Story Definition of Done (DoD)
 - <AC satisfied; tests pass; docs updated; perf/quality gates>
+
+#### Story Exit Checklist (AC Gate — do not proceed unless all checked)
+- [ ] All Acceptance Criteria (AC) demonstrably satisfied
+- [ ] Evidence captured in Runbook (test reports/screenshots/logs)
+- [ ] “Story Tests to Run” all passing in this repo
+- [ ] Story Definition of Done fully met
+- [ ] Tasks Checklist reflects final state
+- [ ] Decision Log includes final "Done" entry for this story
+- [ ] Expertise captured; proposals filed if new guidance is warranted
+- [ ] E2E (if applicable) ran in Fast mode within runtime budget; monitoring logs attached
 
 #### Story Implementation Plan
 - <3–7 steps; files/modules to change; interface/contract updates>
@@ -109,14 +125,14 @@ Note: Applies to both bug fixes and new features.
 Optional pre-steps:
 - Bug fix — 0) Reproduce & write failing test
 - Feature — 0) Define smallest shippable slice & acceptance tests (flag if needed)
-1) Run & Capture — execute tests/commands for S‑1; save logs & metrics; update Decision Log.
+1) Run & Capture — execute tests/commands for S‑1; save logs & metrics; update Decision Log; update Tasks Checklist status; capture new insights in `$FEATURE_DIR/referenced-expertise.md`; if gaps found, add bullets to `$FEATURE_DIR/proposals/expert-additions.md`.
 2) Diagnose — one‑line failure summary; smallest viable fix; re‑scan `experts/` and internal docs if needed.
 3) Plan — 3–5 step micro‑plan; files/functions; rollback note; update risk/impact.
 4) Change — implement minimal delta; commits small; reference `[S‑1/T‑x]`.
 5) Re‑Test & Compare — re‑run failing tests; compare metrics; paste deltas.
-6) Decide — if DoD met → mark S‑1 done; else loop/refine/escalate.
+6) Decide — if AC met AND Story Exit Checklist is fully checked → mark S‑1 done; else loop/refine/escalate.
 
-Stop conditions: 3 loops without measurable progress, or time‑box exceeded → summarize blockers for S‑1 and ask questions (`BLOCKED`).
+Stop conditions (allowed pauses): `NEEDS_CLARIFICATION`, `BLOCKED`, 3 loops without measurable progress, or time‑box exceeded. On pause → summarize blockers for S‑1 in the Decision Log and emit the appropriate stop token.
 
 #### Story Runbook & Logs
 - Test matrix: <commands/environments>
@@ -124,6 +140,13 @@ Stop conditions: 3 loops without measurable progress, or time‑box exceeded →
 - Run summaries: `$FEATURE_DIR/runs/S-1/<RUN_ID>/test-report.md`
 - Decision log entry tag: `[S-1]`
 - Artifacts: `$FEATURE_DIR/artifacts/` (screenshots under `artifacts/screenshots/`)
+ 
+#### Story Progress & Hygiene (per loop)
+- [ ] Update Tasks Checklist statuses (reflect current progress accurately)
+- [ ] Append Decision Log entry `[S-1]` with: timestamp, Attempt, Result, Evidence, Next step or Exit decision
+- [ ] Capture expertise: update `$FEATURE_DIR/referenced-expertise.md`; link context excerpts under `references/excerpts/`
+- [ ] Propose additions: update `$FEATURE_DIR/proposals/expert-additions.md` if guidance gaps exist
+- [ ] If E2E applies: record runtime vs budget and monitoring summary in the Decision Log
  
 #### Sub‑Agent Delegation (Codex CLI)
 - Tasks to delegate: <e.g., scaffold Playwright tests; generate page objects; seed test data; update CI config>
@@ -134,6 +157,10 @@ Stop conditions: 3 loops without measurable progress, or time‑box exceeded →
 - <PRs, tickets, docs>
 
 ## Checklist of Subtasks
+- [ ] Gate: confirm current story’s “Story Exit Checklist” is complete before starting the next story
+- [ ] Never‑Stop: after finishing a story, immediately start the next one (unless blocked)
+- [ ] All User Stories completed (each Exit Checklist fully checked)
+- [ ] Per-loop hygiene: update Tasks Checklist statuses, append Decision Log, capture expertise, propose expert additions if needed
 - [ ] Plan & Setup (repo/env ready, confirm requirements)
 - [ ] Design Solution (modules, data flow, interfaces)
 - [ ] Implement Core Functionality (primary logic, edge cases)
@@ -154,8 +181,13 @@ Stop conditions: 3 loops without measurable progress, or time‑box exceeded →
 - Integration: <e.g., `pytest -q tests/integration`, `pnpm vitest`>
 - E2E (Playwright, if web UI):
   - Setup: `npx playwright install --with-deps`
-  - Run: `npx playwright test --project=chromium --reporter=junit`
-  - Practices: add `data-testid` selectors; stub network where appropriate; use fixtures for auth/data; keep tests idempotent and parallel‑safe.
+  - Modes:
+    - Fast (default, smoke): `E2E_MODE=fast npx playwright test --project=chromium -g "@smoke" --workers=2 --retries=1 --timeout=30000 --reporter=list,junit`
+    - Full (nightly/PR opt‑in): `E2E_MODE=full npx playwright test --project=chromium --retries=2 --timeout=45000 --reporter=junit`
+  - Runtime budgets: total ≤ 5 min in Fast mode; each spec ≤ 60 s; raise `BLOCKED` if exceeded and capture evidence.
+  - Parameterization guidance: prefer headless; stub external calls; limit data range/time windows; reduce fixtures size; minimize retries/workers for stability; capture trace/video only on failure.
+  - Monitoring during run: wrap with `/usr/bin/time -v` (or `time -lp` on macOS) and `tee` logs; consider `docker stats`/`pidstat` if containerized.
+  - Practices: add `data-testid` selectors; stub network where appropriate; use fixtures for auth/data; keep tests deterministic, idempotent, and parallel‑safe.
 
 ## Experts to Scan (keywords)
 <!-- One query per line for scanning local experts/docs. -->
@@ -201,17 +233,29 @@ Stop conditions: 3 loops without measurable progress, or time‑box exceeded →
 - If local sources are insufficient, perform a brief, targeted web search before drafting the plan; integrate only essential findings into relevant plan sections (Constraints, Dependencies, Risks). No separate web‑research section is required.
 - Produce a structured Plan (Part 1) with multiple User Stories. Each story must include its own Implementation Plan, Execution Protocol, and Runbook & Logs; add a cross‑cutting Implementation Plan only if needed. Do not execute code in this phase.
 - Never add performance-improvement acceptance criteria or metrics unless the user explicitly requests them.
+- Never advance to the next user story until the current story’s Acceptance Criteria are satisfied and evidenced; use the “Story Exit Checklist” as the gate.
+- Enforce process hygiene every loop: update the Tasks Checklist, append a Decision Log entry, capture any new expertise in `referenced-expertise.md`, and propose additions in `proposals/expert-additions.md` when guidance gaps appear.
+- Keep E2E fast and monitored: select Fast parameters by default, enforce runtime budgets, and capture monitoring output alongside test reports.
 - Emit an Expert Augmentation proposal if new guidance is warranted.
 
 ### Plan Flow & Clarification Gate
 - If any critical clarification is unanswered → emit `NEEDS_CLARIFICATION` before starting.
 - Flow: Clarify → Bootstrap → Local‑first research → Define User Stories → Draft & finalize plan (per‑story Implementation Plan, Execution Protocol, Runbook & Logs).
+- Per‑story gating: Do not advance to the next story until the “Story Exit Checklist” is complete (all AC satisfied and evidenced).
+
+### Process Hygiene (must-do, every loop)
+- Update checkboxes in the story’s Tasks Checklist to reflect actual progress.
+- Add a Decision Log entry under `$FEATURE_DIR/decision-log.md` using the template in Appendix C.
+- Record newly referenced expertise and links in `$FEATURE_DIR/referenced-expertise.md`; store excerpts under `references/excerpts/`.
+- If new guidance is needed for future work, add concise bullets under `$FEATURE_DIR/proposals/expert-additions.md`.
+- If E2E ran, record runtime vs budget and monitoring outputs in the Decision Log.
 
 ### Recommended Practices (baked into plan.md)
 - Testing
   - Require a smoke test (live or end-to-end) in every user story whenever the feature can be validated via a quick real execution; list the exact command/spec under “Story Tests to Run”.
   - Prefer Playwright for E2E on web UIs; add `data-testid` attributes; keep tests deterministic; run headless in CI with JUnit/HTML reports.
   - Use fixtures for auth/data; stub external network calls; keep tests parallel‑safe.
+  - E2E speed & stability: run Fast mode by default (smoke/@smoke tag), limit data/time ranges, stub external calls, cap workers (e.g., `--workers=2`), set strict per‑spec timeouts, and enable trace/video only on failure.
 - Sub‑Agent Delegation (Codex CLI)
   - Delegate mechanical tasks (scaffold tests, generate page objects/mocks, seed test data, update CI) as “Sub‑Agent Delegation” items under each story.
   - Specify inputs (AC, endpoints, mock data) and acceptance (files, paths, tests that must pass).
@@ -220,6 +264,8 @@ Stop conditions: 3 loops without measurable progress, or time‑box exceeded →
   - Proactively inspect config files, `.env` files, and JSON settings for available API keys or credentials needed to execute smoke tests, and reference their locations in the plan.
 - Reliability & Observability
   - Set timeouts/retries thoughtfully; add structured logs around critical paths; capture artifacts under `$FEATURE_DIR/runs/S-*/<RUN_ID>/`.
+ - Process Hygiene
+  - After every loop, update Tasks Checklist, append to `decision-log.md`, record new expertise in `referenced-expertise.md`, and add bullets to `proposals/expert-additions.md` when guidance gaps are discovered.
 
 ### 1) Workspace & Bootstrap (what and how)
 Create a dedicated feature folder and write all plans, logs, and artifacts there.
@@ -455,9 +501,20 @@ N/A
 
 #### Story Tests to Run
 - pytest -q tests/test_health.py::test_ok tests/test_health.py::test_db_down
+  # If a UI exists for this flow, run a Fast E2E smoke for this story (≤60s):
+  # E2E_MODE=fast npx playwright test tests/e2e/health.spec.ts -g "@smoke" --workers=2 --retries=1 --timeout=30000
 
 #### Story Definition of Done (DoD)
 - AC satisfied; response matches schema; 503 on DB failure; tests pass; docs updated
+
+#### Story Exit Checklist (AC Gate — do not proceed unless all checked)
+- [ ] All Acceptance Criteria satisfied for S‑1
+- [ ] Evidence captured in Runbook (test report, logs)
+- [ ] Listed tests passing: ok and db_down
+- [ ] DoD items verified
+- [ ] Tasks Checklist reflects final state
+- [ ] Decision Log includes final "Done" entry `[S‑1]`
+- [ ] Expertise captured; proposals filed if needed
 
 #### Story Implementation Plan
 - Wire new `GET /health` in router; return schema `{status, build, db}`
@@ -467,12 +524,12 @@ N/A
 - Update README with example curl
 
 #### Story Execution Protocol (Closed Loop)
-1) Run & Capture — execute listed tests; save logs; update Decision Log `[S‑1]`.
+1) Run & Capture — execute listed tests; save logs; update Decision Log `[S‑1]`; update Tasks Checklist; capture expertise; add proposals if needed; if E2E ran, record runtime vs budget and attach monitoring outputs.
 2) Diagnose — summarize failures; pick smallest viable fix.
 3) Plan — micro‑plan with files/functions to change; note rollback.
 4) Change — implement minimal delta; reference `[S‑1/T‑x]`.
 5) Re‑Test & Compare — rerun failing tests; verify schema/HTTP codes.
-6) Decide — if DoD met → mark S‑1 done; else loop/refine.
+6) Decide — if AC met AND Story Exit Checklist is fully checked → mark S‑1 done; else loop/refine (Never‑Stop unless blocked/time‑box/3‑loop rule applies).
 
 #### Story Runbook & Logs
 - Test matrix: pytest -q
@@ -480,6 +537,12 @@ N/A
 - Run summaries: `$FEATURE_DIR/runs/S-1/<RUN_ID>/test-report.md`
 - Decision log entry tag: `[S-1]`
 - Artifacts: `$FEATURE_DIR/artifacts/`
+ 
+#### Story Progress & Hygiene (per loop)
+- [ ] Update Tasks Checklist statuses
+- [ ] Append Decision Log entry `[S-1]` with Attempt, Result, Evidence, Next step/Exit
+- [ ] Capture expertise in `referenced-expertise.md`; link relevant excerpts
+- [ ] Propose additions in `proposals/expert-additions.md` if warranted
 
 #### Links/Artifacts
 - PR: <link>
@@ -523,4 +586,33 @@ Checklist
 
 ## <Another-Topic>
 ...
+```
+
+### Appendix D: E2E Runtime & Monitoring Cheatsheet (optional)
+```bash
+# Fast smoke run with runtime capture (Linux)
+/usr/bin/time -v npx playwright test --project=chromium -g "@smoke" \
+  --workers=2 --retries=1 --timeout=30000 --reporter=list,junit \
+  2>&1 | tee "$FEATURE_DIR/runs/S-*/$(date -u +%Y%m%dT%H%M%SZ)/stdout.log"
+
+# macOS variant (fallback if /usr/bin/time -v not available)
+time -lp npx playwright test --project=chromium -g "@smoke" --workers=2 --retries=1 --timeout=30000
+
+# Containerized monitoring (optional)
+docker stats --no-stream
+
+# Record slow tests (pytest example)
+pytest -q --durations=10
+```
+
+### Appendix C: Decision Log Entry Template
+```markdown
+## [S-<id>] <short outcome> — <YYYY-MM-DDTHH:MM:SSZ>
+- Attempt: <what you ran/changed>
+- Result: <pass/fail, key deltas>
+- Evidence: <paths to reports/logs/artifacts>
+- Decision: <continue/refine/escalate/done/blocked>
+- Next step: <1–2 lines or link to micro‑plan>
+- Runtime (if E2E): <total vs budget; slowest spec>
+- Monitoring: <brief notes, e.g., CPU/mem spikes; links to logs>
 ```
