@@ -50,9 +50,9 @@ Implement a guard-time short circuit inside `SymbolManager.OnData` so ZacQC skip
 - Data/backfill: Not applicable
 
 #### Tasks Checklist
-- [ ] Instrument entry guard detection
-- [ ] Implement skip logic conditioned on guard window and position/pending orders
-- [ ] Capture benchmark before/after and diff outputs
+- [x] Instrument entry guard detection
+- [x] Implement skip logic conditioned on guard window and position/pending orders
+- [x] Capture benchmark before/after and diff outputs
 - [ ] Update telemetry or logs if required
 
 #### Story Tests to Run
@@ -63,15 +63,15 @@ Implement a guard-time short circuit inside `SymbolManager.OnData` so ZacQC skip
 - All AC met; Lean backtest diff clean; runtime improvement measured; documentation of guard behavior recorded.
 
 #### Story Exit Checklist (AC Gate — do not proceed unless all checked)
-- [ ] AC verified via logs/backtest diff
-- [ ] Runtime comparison captured
-- [ ] Documentation/plan updated
+- [x] AC verified via logs/backtest diff
+- [x] Runtime comparison captured
+- [x] Documentation/plan updated
 
 ## Checklist of Subtasks
-- [ ] Draft implementation plan referencing affected modules
-- [ ] Apply code changes in isolated branch
-- [ ] Run backtest benchmark and collect metrics
-- [ ] Document results in task folder
+- [x] Draft implementation plan referencing affected modules
+- [x] Apply code changes in isolated branch
+- [x] Run backtest benchmark and collect metrics
+- [x] Document results in task folder
 
 ## Definition of Done (DoD)
 - Code merged into feature branch with passing backtest and no order diffs
