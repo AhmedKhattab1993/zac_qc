@@ -34,9 +34,21 @@ ZacQC is a reference implementation of the Zac trading system adapted for QuantC
 | [`server.backtest_server`](modules/server.backtest_server.md) | Backtest orchestration API |
 | [`server.trading_calendar`](modules/server.trading_calendar.md) | Trading day calculations |
 
+## End-to-End Testing
+- The backtest server now honours the following environment overrides (all optional, defaulting to the production paths):
+  - `BACKTEST_DATA_ROOT`: custom Lean data directory. Tests set this to a temporary folder so downloads do not touch the shared `data/` tree.
+  - `BACKTEST_CONFIG_PATH`: alternative `parameters.py` module loaded by both the Flask server and the Lean algorithm. When set, the algorithm mirrors the override via the same environment variable.
+  - `BACKTEST_SYMBOLS`: comma-separated symbol list used during data availability checks.
+- Use the support CLI to scaffold Playwright scenarios, e.g. `python -m tests.e2e.support.cli missing-data --workspace /tmp/zac-e2e` or `... cached-data ...`.
+- Pytest smoke for the harness: `pytest -q tests/e2e/support/test_backtest_harness.py`.
+- Playwright specs (Chromium, single worker):
+  - Missing data path: `E2E_MODE=fast npx playwright test tests/e2e/backtest-data-availability.spec.ts -g "@missing-data" --project=chromium --workers=1 --retries=0`
+  - Cached data path: `E2E_MODE=fast npx playwright test tests/e2e/backtest-data-availability.spec.ts -g "@cached-data" --project=chromium --workers=1 --retries=0`
+- Test artifacts, server logs, and Lean stdout snapshots are stored under `tasks/playwright-backtest-data-availability-*/runs/`.
+
 ## Contributing
 - Ensure docstrings follow NumPy style for public symbols.
 - Update per-module documentation and refresh the index when adding new modules.
 - Run backtests after modifying trading logic to confirm behaviour.
 
-Last updated: 2025-10-14
+Last updated: 2025-10-16

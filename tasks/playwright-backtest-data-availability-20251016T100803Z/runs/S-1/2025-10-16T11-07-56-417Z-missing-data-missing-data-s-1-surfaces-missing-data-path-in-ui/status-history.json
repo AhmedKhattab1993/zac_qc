@@ -1,0 +1,20 @@
+[
+  {
+    "timestamp": "2025-10-16T11:07:59.365Z",
+    "status": "downloading_data",
+    "phase": "data_download",
+    "log_count": 11
+  },
+  {
+    "timestamp": "2025-10-16T11:09:08.439Z",
+    "status": "running_backtest",
+    "phase": "backtest_execution",
+    "log_count": 31
+  },
+  {
+    "timestamp": "2025-10-16T11:10:17.282Z",
+    "status": "completed",
+    "phase": "backtest_execution",
+    "log_count": 332
+  }
+]

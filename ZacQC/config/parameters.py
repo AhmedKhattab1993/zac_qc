@@ -1,7 +1,10 @@
 # parameters.py - Trading Parameters Configuration
 from datetime import time
+import importlib.util
 import json
 import os
+import sys
+from pathlib import Path
 
 class TradingParameters:
     """
@@ -136,6 +139,7 @@ class TradingParameters:
         
         # REMOVED: _load_from_config() - Now uses ONLY hardcoded values from parameters.py
         # No more config.json override - browser and backtest both use the same source
+        self._apply_env_override()
     
     def _load_from_config(self):
         """Load parameters from config.json if it exists"""
@@ -187,9 +191,67 @@ class TradingParameters:
                         setattr(self, key, value)
         except Exception as e:
             # Log the error for debugging but continue with defaults
-            import sys
             print(f"Warning: Error loading config parameters: {e}", file=sys.stderr)
             pass
+
+    # ------------------------------------------------------------------
+    # Test / automation helpers
+    # ------------------------------------------------------------------
+    def _apply_env_override(self):
+        """Override parameter values using external module path if configured."""
+        override_path = os.environ.get("BACKTEST_CONFIG_PATH")
+        if not override_path:
+            return
+
+        try:
+            resolved_override = Path(override_path).expanduser().resolve()
+            current_file = Path(__file__).resolve()
+        except Exception:
+            resolved_override = Path(os.path.abspath(override_path))
+            current_file = Path(os.path.abspath(__file__))
+
+        if resolved_override == current_file:
+            return
+
+        try:
+            override_instance = self._load_external_parameters(resolved_override)
+        except Exception as exc:
+            print(f"Warning: Failed to load BACKTEST_CONFIG_PATH override '{override_path}': {exc}", file=sys.stderr)
+            return
+
+        self._copy_public_attributes(override_instance)
+
+    @staticmethod
+    def _load_external_parameters(path: Path):
+        """Load a TradingParameters instance from another Python module."""
+        spec = importlib.util.spec_from_file_location("zacqc_parameters_override", path)
+        if spec is None or spec.loader is None:
+            raise ImportError(f"Unable to create module spec for {path}")
+
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)  # type: ignore[attr-defined]
+
+        if hasattr(module, "TradingParameters"):
+            override_cls = getattr(module, "TradingParameters")
+            override_instance = override_cls()
+        elif hasattr(module, "parameters"):
+            override_instance = getattr(module, "parameters")
+        else:
+            raise AttributeError(f"{path} must define TradingParameters or 'parameters'")
+
+        return override_instance
+
+    def _copy_public_attributes(self, override_instance):
+        """Copy public, non-callable attributes from override instance onto self."""
+        for attr in dir(override_instance):
+            if attr.startswith("_"):
+                continue
+
+            value = getattr(override_instance, attr)
+            if callable(value):
+                continue
+
+            setattr(self, attr, value)
     
     def update_parameter(self, param_name, value):
         """

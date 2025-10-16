@@ -1,0 +1,11 @@
+{
+  "runtime_seconds": 122.361,
+  "status_history_entries": 3,
+  "log_markers": {
+    "missingData": false,
+    "secondsAvailable": true,
+    "downloadComplete": true,
+    "leanStarted": true,
+    "backtestCompleted": true
+  }
+}

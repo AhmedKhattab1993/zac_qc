@@ -53,9 +53,15 @@ def load_config_strict(config_path):
         spec = importlib.util.spec_from_file_location("parameters", config_path)
         parameters_module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(parameters_module)
-        
         # Create instance and properly initialize with CURRENT values from parameters.py
-        params = parameters_module.TradingParameters()
+        if hasattr(parameters_module, "TradingParameters"):
+            params = parameters_module.TradingParameters()
+        elif hasattr(parameters_module, "parameters"):
+            params = getattr(parameters_module, "parameters")
+        else:
+            raise AttributeError(
+                "Parameters module must define TradingParameters class or 'parameters' object"
+            )
         
         # Convert to dictionary for API compatibility
         config_dict = {}
@@ -370,8 +376,36 @@ latest_results_path = None
 # Global flag to disable all data downloads
 DISABLE_DATA_DOWNLOAD = False  # Set to True to skip all data downloads and use only local data
 
-# Config file path - use ZacQC/config/parameters.py directly as requested
-CONFIG_FILE_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "ZacQC", "config", "parameters.py")
+PROJECT_ROOT = Path(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+DEFAULT_CONFIG_PATH = PROJECT_ROOT / "ZacQC" / "config" / "parameters.py"
+DEFAULT_DATA_ROOT = PROJECT_ROOT / "data"
+
+
+def _resolve_path_override(env_var: str, *, default: Path) -> Path:
+    """Resolve an optional environment override for filesystem paths."""
+    raw_value = os.getenv(env_var)
+    if not raw_value:
+        return default
+
+    candidate = Path(raw_value).expanduser()
+    if not candidate.is_absolute():
+        candidate = (PROJECT_ROOT / candidate).resolve()
+    return candidate
+
+
+def _symbol_override_from_env() -> list[str] | None:
+    """Parse BACKTEST_SYMBOLS env var into a normalized symbol list if provided."""
+    raw_value = os.getenv("BACKTEST_SYMBOLS")
+    if not raw_value:
+        return None
+
+    symbols = [token.strip().upper() for token in raw_value.split(",") if token.strip()]
+    return symbols or None
+
+
+CONFIG_FILE_PATH = str(_resolve_path_override("BACKTEST_CONFIG_PATH", default=DEFAULT_CONFIG_PATH))
+DATA_ROOT_OVERRIDE = _resolve_path_override("BACKTEST_DATA_ROOT", default=DEFAULT_DATA_ROOT)
+SYMBOL_OVERRIDE = _symbol_override_from_env()
 
 
 def _env_flag(name: str, default: bool) -> bool:
@@ -397,6 +431,7 @@ class BacktestManager:
         self.download_progress = {}
         self._project_root = Path(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         self._data_root = Path(data_root) if data_root else self._project_root / "data"
+        self._data_root.mkdir(parents=True, exist_ok=True)
         self._downloader_factory = downloader_factory or self._default_downloader_factory
         self._last_download_summary = None
         self._last_download_method = None
@@ -938,7 +973,11 @@ class BacktestManager:
                 raise ValueError("Config must contain 'start_date' field")
             if 'end_date' not in config:
                 raise ValueError("Config must contain 'end_date' field")
-                
+
+            if SYMBOL_OVERRIDE:
+                config['symbols'] = SYMBOL_OVERRIDE
+                backtest_logger.info(f"🎯 DATA CHECK: Overriding symbols via BACKTEST_SYMBOLS -> {', '.join(SYMBOL_OVERRIDE)}")
+
             symbols = config['symbols']
             start_date = config['start_date']
             end_date = config['end_date']
@@ -1460,7 +1499,7 @@ class BacktestManager:
             })
 
 # Initialize backtest manager
-backtest_manager = BacktestManager()
+backtest_manager = BacktestManager(data_root=str(DATA_ROOT_OVERRIDE))
 
 # API Routes
 @app.route('/api/backtest/start', methods=['POST'])

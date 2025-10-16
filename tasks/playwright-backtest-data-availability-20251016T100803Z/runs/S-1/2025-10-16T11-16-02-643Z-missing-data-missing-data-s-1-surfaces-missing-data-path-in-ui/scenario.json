@@ -1,0 +1,15 @@
+{
+  "env": {
+    "BACKTEST_DATA_ROOT": "/var/folders/n1/jf02v0bn467c8m841mwsjqxr0000gn/T/zac-missing-data-04U8BR/data",
+    "BACKTEST_CONFIG_PATH": "/var/folders/n1/jf02v0bn467c8m841mwsjqxr0000gn/T/zac-missing-data-04U8BR/config/parameters.py",
+    "BACKTEST_SYMBOLS": "SPY"
+  },
+  "data_root": "/var/folders/n1/jf02v0bn467c8m841mwsjqxr0000gn/T/zac-missing-data-04U8BR/data",
+  "config_path": "/var/folders/n1/jf02v0bn467c8m841mwsjqxr0000gn/T/zac-missing-data-04U8BR/config/parameters.py",
+  "symbols": [
+    "SPY"
+  ],
+  "start_date": "2025-10-08",
+  "end_date": "2025-10-08",
+  "trading_day": "2025-10-08"
+}

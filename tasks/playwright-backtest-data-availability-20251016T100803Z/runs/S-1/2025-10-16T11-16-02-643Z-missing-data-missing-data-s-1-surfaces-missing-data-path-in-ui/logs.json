@@ -1,0 +1,1663 @@
+{
+  "logs": [
+    {
+      "message": "🗂️ [DATA DOWNLOAD] Preparing data download for symbols: SPY",
+      "phase": "data_download",
+      "timestamp": "14:16:05"
+    },
+    {
+      "message": "📅 [DATA DOWNLOAD] Date range: 2025-10-08 to 2025-10-08",
+      "phase": "data_download",
+      "timestamp": "14:16:05"
+    },
+    {
+      "message": "🔍 [DATA CHECK] Checking data for SPY...",
+      "phase": "data_download",
+      "timestamp": "14:16:05"
+    },
+    {
+      "message": "⚠️ [DATA CHECK] Check completed in 0.1s - Missing data for 1 symbols: SPY",
+      "phase": "data_download",
+      "timestamp": "14:16:05"
+    },
+    {
+      "message": "✅ [DATA CHECK] Complete data for 0 symbols: None",
+      "phase": "data_download",
+      "timestamp": "14:16:05"
+    },
+    {
+      "message": "📊 [DATA DOWNLOAD] Daily and Minute data will always be downloaded for latest updates",
+      "phase": "data_download",
+      "timestamp": "14:16:05"
+    },
+    {
+      "message": "⬇️ [DATA CHECK] Will download Daily/Minute for all symbols + Seconds data for 1 missing symbols: SPY",
+      "phase": "data_download",
+      "timestamp": "14:16:05"
+    },
+    {
+      "message": "🚀 [DATA DOWNLOAD] Starting download process...",
+      "phase": "data_download",
+      "timestamp": "14:16:05"
+    },
+    {
+      "message": "🚀 [DATA DOWNLOAD] Starting download process...",
+      "phase": "data_download",
+      "timestamp": "14:16:05"
+    },
+    {
+      "message": "🛠️ [DATA DOWNLOAD] Using native Polygon incremental downloader",
+      "phase": "data_download",
+      "timestamp": "14:16:05"
+    },
+    {
+      "message": "⏱️ [DATA DOWNLOAD] Native step 1/3: Daily (1 symbols)",
+      "phase": "data_download",
+      "timestamp": "14:16:05"
+    },
+    {
+      "message": "⏱️ [DATA DOWNLOAD] Native step 2/3: Minute (1 symbols)",
+      "phase": "data_download",
+      "timestamp": "14:16:06"
+    },
+    {
+      "message": "⏱️ [DATA DOWNLOAD] Native step 3/3: Second (1 symbols)",
+      "phase": "data_download",
+      "timestamp": "14:17:06"
+    },
+    {
+      "message": "✅ [DATA DOWNLOAD] Native downloader finished in 63.1s (downloads: 503, cache hits: 0)",
+      "phase": "data_download",
+      "timestamp": "14:17:08"
+    },
+    {
+      "message": "✅ [DATA DOWNLOAD] Phase completed in 63.2s",
+      "phase": "data_download",
+      "timestamp": "14:17:08"
+    },
+    {
+      "message": "🚀 [BACKTEST EXECUTION] Starting backtest execution phase",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:08"
+    },
+    {
+      "message": "🏠 [BACKTEST EXECUTION] Using local data (no live API calls during backtest)",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:08"
+    },
+    {
+      "message": "✅ [BACKTEST EXECUTION] Config file ready: /var/folders/n1/jf02v0bn467c8m841mwsjqxr0000gn/T/zac-missing-data-04U8BR/config/parameters.py",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:08"
+    },
+    {
+      "message": "✅ [BACKTEST EXECUTION] Config file prepared in data folder for algorithm access",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:08"
+    },
+    {
+      "message": "⚡ [BACKTEST EXECUTION] Launching Lean CLI with command: lean backtest ZacQC --no-update",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:08"
+    },
+    {
+      "message": "✅ [BACKTEST EXECUTION] Lean process started (PID: 15650)",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:08"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:09.549 TRACE:: Config.Get(): Configuration key not found. Key:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] version-id - Using default value:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:09.552 TRACE:: Config.Get(): Configuration key not found. Key:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] cache-location - Using default value:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:09.553 TRACE:: Config.Get(): Configuration key not found. Key:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] api-url - Using default value: https://www.quantconnect.com/api/v2/",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:09.553 TRACE:: Config.Get(): Configuration key not found. Key:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] plugin-directory - Using default value:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:09.555 TRACE:: Composer(): Loading Assemblies from",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] /Lean/Launcher/bin/Debug",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:09.594 TRACE:: Python for .NET Assembly: Python.Runtime,",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] Version=2.0.48.0, Culture=neutral, PublicKeyToken=5000fea6cba702dd",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:09.608 TRACE:: Engine.Main(): LEAN ALGORITHMIC TRADING ENGINE",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] v2.5.0.0 Mode: DEBUG (64bit) Host: Mac-Studio",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:09.613 TRACE:: Engine.Main(): Started 11:17 AM",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:09.616 TRACE:: Config.Get(): Configuration key not found. Key:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] lean-manager-type - Using default value: LocalLeanManager",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:09.629 TRACE:: JobQueue.NextJob(): Selected /LeanCLI/main.py",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:09.652 TRACE:: Config.GetValue():",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] scheduled-event-leaky-bucket-capacity - Using default value: 120",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:09.652 TRACE:: Config.GetValue():",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] scheduled-event-leaky-bucket-time-interval-minutes - Using default value: 1440",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:09.653 TRACE:: Config.GetValue():",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] scheduled-event-leaky-bucket-refill-amount - Using default value: 18",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:09.653 TRACE:: Config.GetValue(): storage-limit - Using default",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] value: 10737418240",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:09.654 TRACE:: Config.GetValue(): storage-permissions - Using",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] default value: Read=True Write=True Delete=True",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:09.655 TRACE:: Config.Get(): Configuration key not found. Key:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] optimization-id - Using default value:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:09.655 TRACE:: Config.Get(): Configuration key not found. Key:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] backtest-name - Using default value: local",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:09.658 TRACE:: Config.Get(): Configuration key not found. Key:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] data-channel - Using default value:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:09.658 TRACE:: Config.Get(): Configuration key not found. Key:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] python-venv - Using default value:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:09.658 TRACE:: Config.Get(): Configuration key not found. Key:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] out-of-sample-max-end-date - Using default value:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:09.658 TRACE:: Config.GetValue(): out-of-sample-days - Using",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] default value: 0",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:09.659 TRACE:: Config.Get(): Configuration key not found. Key:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] data-permission-manager - Using default value: DataPermissionManager",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:09.659 TRACE:: Config.Get(): Configuration key not found. Key:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] data-monitor - Using default value: QuantConnect.Data.DataMonitor",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:09.668 TRACE:: Config.GetValue(): algorithm-creation-timeout -",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] Using default value: 90",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:09.674 TRACE:: Config.GetValue(): zip-data-cache-provider - Using",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] default value: 10",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:09.675 TRACE:: Config.Get(): Configuration key not found. Key:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] fundamental-data-provider - Using default value: CoarseFundamentalDataProvider",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:09.677 TRACE:: AlgorithmManager.CreateTokenBucket(): Initializing",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] LeakyBucket: Capacity: 120 RefillAmount: 18 TimeInterval: 1440",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:09.685 TRACE:: Config.GetValue(): downloader-data-update-period -",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] Using default value: 7",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:09.686 TRACE:: Engine.Run(): Resource limits '0' CPUs. 2147483647",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] MB RAM.",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:09.687 TRACE:: TextSubscriptionDataSourceReader.SetCacheSize():",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] Setting cache size to 71582788 items",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:09"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:10.068 TRACE:: PythonInitializer.Initialize(): start...",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:10"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] PythonEngine.Initialize(): clr GetManifestResourceStream...",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:10"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:10.531 TRACE:: PythonInitializer.Initialize(): ended",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:10"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:10.532 TRACE:: AlgorithmPythonWrapper(): Python version 3.11.9 |",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:10"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] packaged by conda-forge | (main, Apr 19 2024, 18:26:34) [GCC 12.3.0]: Importing",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:10"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] python module main",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:10"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:12.544 TRACE:: AlgorithmPythonWrapper(): main successfully",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:12"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] imported.",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:12"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:12.552 TRACE:: AlgorithmPythonWrapper(): Creating IAlgorithm",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:12"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] instance.",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:12"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:12.558 TRACE:: Config.Get(): Configuration key not found. Key:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:12"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] databases-refresh-period - Using default value: 1.00:00:00",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:12"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:12.558 TRACE:: Config.GetValue(): ignore-unknown-asset-holdings -",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:12"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] Using default value: True",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:12"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:12.616 TRACE:: Config.GetValue(): mute-python-library-logging -",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:12"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] Using default value: True",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:12"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:12.620 TRACE:: LocalObjectStore.Initialize(): Storage Root:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:12"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] /Storage. StorageFileCount 9999999. StorageLimit 10240MB. StoragePermissions",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:12"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] Read=True Write=True Delete=True",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:12"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:12.624 TRACE:: Config.GetValue(): zip-data-cache-provider - Using",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:12"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] default value: 10",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:12"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:12.626 TRACE:: HistoryProviderManager.Initialize(): history",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:12"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] providers [SubscriptionDataReaderHistoryProvider]",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:12"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:12.629 TRACE:: BaseSetupHandler.Setup(LocalPlatform): UID:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:12"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 290161, PID: -837531786, Version: 2.5.0.0, Source: WebIDE",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:12"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:12.631 TRACE:: Config.Get(): Configuration key not found. Key:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:12"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] security-data-feeds - Using default value:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:12"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:12.724 TRACE:: Config.GetValue(): data-feed-workers-count - Using",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:12"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] default value: 10",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:12"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:12.724 TRACE:: Config.GetValue(): data-feed-max-work-weight -",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:12"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] Using default value: 400",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:12"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:12.724 TRACE:: WeightedWorkScheduler(): will use 10 workers and",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:12"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] MaxWorkWeight is 400",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:12"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:13.004 TRACE:: Event Name \"EveryDay: 15.98\", scheduled to run.",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:13.006 TRACE:: Event Name \"EveryDay: 14\", scheduled to run.",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:13.016 TRACE:: BaseSetupHandler.SetupCurrencyConversions():",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] Account Type: Margin",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] ",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] Symbol      Quantity    Conversion = Value in USD",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] USD: $      500000.00 @       1.00 = $500000",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] -------------------------------------------------",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] CashBook Total Value:                $500000",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] ",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:13.018 TRACE:: Total margin information: TotalMarginUsed: 0.00,",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] MarginRemaining: 500000.00",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:13.018 TRACE:: SetUp Backtesting: User: 290161 ProjectId:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] -837531786 AlgoId: 1729485007",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:13.019 TRACE:: Dates: Start: 10/01/2025 End: 10/10/2025 Cash:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] ¤500,000.00 MaximumRuntime: 100.00:00:00 MaxOrders: 2147483647",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:13.020 TRACE:: BacktestingResultHandler(): Sample Period Set:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 04.00",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:13.021 TRACE:: Config.GetValue(): forward-console-messages -",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] Using default value: True",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:13.021 TRACE:: JOB HANDLERS:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] DataFeed:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] QuantConnect.Lean.Engine.DataFeeds.FileSystemDataFeed",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] Setup:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] QuantConnect.Lean.Engine.Setup.BacktestingSetupHandler",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] RealTime:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] QuantConnect.Lean.Engine.RealTime.BacktestingRealTimeHandler",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] Results:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] QuantConnect.Lean.Engine.Results.BacktestingResultHandler",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] Transactions:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] Object Store:         QuantConnect.Lean.Engine.Storage.LocalObjectStore",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] History Provider:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] QuantConnect.Lean.Engine.HistoricalData.HistoryProviderManager",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] Brokerage:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] QuantConnect.Brokerages.Backtesting.BacktestingBrokerage",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] Data Provider:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] QuantConnect.Lean.Engine.DataFeeds.DefaultDataProvider",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] ",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:13.030 TRACE:: Event Name \"Daily Sampling\", scheduled to run.",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:13.032 TRACE:: AlgorithmManager.Run(): Begin DataStream - Start:",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 10/1/2025 12:00:00 AM Stop: 10/10/2025 11:59:59 PM Time: 10/1/2025 12:00:00 AM",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] Warmup: False",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:13.054 TRACE:: Debug: Launching analysis for 1729485007 with LEAN",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] Engine v2.5.0.0",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:13.145 TRACE:: UniverseSelection.AddPendingInternalDataFeeds():",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] Adding internal benchmark data feed",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] SPY,#0,SPY,Hour,TradeBar,Trade,Adjusted,OpenInterest,Internal",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:17:13.382 TRACE:: Debug: Accurate daily end-times now enabled by",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] default. See more at https://qnt.co/3YHaWHL. To disable it and use legacy daily",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] bars set self.settings.daily_precise_end_time = False.",
+      "phase": "backtest_execution",
+      "timestamp": "14:17:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:13.680 TRACE:: Isolator.ExecuteWithTimeLimit(): Used: 129,",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] Sample: 161, App: 1174, CurrentTimeStepElapsed: 00:00.000. CPU: 113%",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:13"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.342 TRACE:: Synchronizer.GetEnumerator(): Exited thread.",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.343 TRACE:: AlgorithmManager.Run(): Firing On End Of",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] Algorithm...",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.344 TRACE:: Engine.Run(): Exiting Algorithm Manager",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.345 TRACE:: StopSafely(): Waiting for 'Isolator Thread' thread",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] to stop...",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.346 TRACE:: FileSystemDataFeed.Exit(): Start. Setting",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] cancellation token...",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.346 TRACE:: FileSystemDataFeed.Exit(): Exit Finished.",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.347 TRACE:: BacktestingResultHandler.Exit(): starting...",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.347 TRACE:: BacktestingResultHandler.Exit(): Saving logs...",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.348 TRACE:: StopSafely(): Waiting for 'Result Thread' thread",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] to stop...",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.348 TRACE:: Log: === FINAL PERFORMANCE SUMMARY ===",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.348 TRACE:: Log: PERF_FINAL AAPL | data_manager=avg:0.00ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] max:0.06ms n=12480 | rally_update=avg:0.01ms max:1.36ms n=12479 |",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] metrics=avg:0.05ms max:5.22ms n=12479 | risk_checks=avg:0.01ms max:0.08ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] n=12479 | strategy_logic=avg:0.11ms max:24.59ms n=12479 | total=avg:0.20ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] max:24.70ms n=12479",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.349 TRACE:: Log: PERF_FINAL ABBV | data_manager=avg:0.00ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] max:0.05ms n=12480 | rally_update=avg:0.01ms max:0.11ms n=12479 |",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] metrics=avg:0.05ms max:2.03ms n=12479 | risk_checks=avg:0.00ms max:0.16ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] n=12479 | strategy_logic=avg:0.07ms max:23.29ms n=12479 | total=avg:0.15ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] max:23.38ms n=12479",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.349 TRACE:: Log: PERF_FINAL AMD | data_manager=avg:0.00ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] max:0.06ms n=12480 | rally_update=avg:0.01ms max:0.06ms n=12479 |",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] metrics=avg:0.05ms max:4.53ms n=12479 | risk_checks=avg:0.00ms max:0.06ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] n=12479 | strategy_logic=avg:0.06ms max:7.83ms n=12479 | total=avg:0.14ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] max:7.92ms n=12479",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.349 TRACE:: Log: PERF_FINAL AMZN | data_manager=avg:0.00ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] max:0.07ms n=12480 | rally_update=avg:0.01ms max:0.20ms n=12479 |",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] metrics=avg:0.05ms max:1.71ms n=12479 | risk_checks=avg:0.00ms max:0.07ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] n=12479 | strategy_logic=avg:0.09ms max:9.25ms n=12479 | total=avg:0.17ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] max:9.33ms n=12479",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.349 TRACE:: Log: PERF_FINAL GS | data_manager=avg:0.00ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] max:0.04ms n=12480 | rally_update=avg:0.01ms max:0.09ms n=12479 |",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] metrics=avg:0.05ms max:1.82ms n=12479 | risk_checks=avg:0.00ms max:0.05ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] n=12479 | strategy_logic=avg:0.10ms max:28.01ms n=12479 | total=avg:0.18ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] max:28.10ms n=12479",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.349 TRACE:: Log: PERF_FINAL HAL | data_manager=avg:0.00ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] max:0.04ms n=12480 | rally_update=avg:0.01ms max:0.10ms n=12479 |",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] metrics=avg:0.05ms max:7.53ms n=12479 | risk_checks=avg:0.00ms max:0.06ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] n=12479 | strategy_logic=avg:0.07ms max:5.28ms n=12479 | total=avg:0.15ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] max:7.65ms n=12479",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.349 TRACE:: Log: PERF_FINAL JNJ | data_manager=avg:0.00ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] max:0.05ms n=12480 | rally_update=avg:0.01ms max:0.10ms n=12479 |",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] metrics=avg:0.05ms max:2.41ms n=12479 | risk_checks=avg:0.00ms max:0.07ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] n=12479 | strategy_logic=avg:0.10ms max:7.42ms n=12479 | total=avg:0.18ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] max:7.52ms n=12479",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.349 TRACE:: Log: PERF_FINAL MCD | data_manager=avg:0.00ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] max:0.03ms n=12480 | rally_update=avg:0.01ms max:0.31ms n=12479 |",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] metrics=avg:0.05ms max:4.39ms n=12479 | risk_checks=avg:0.00ms max:0.04ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] n=12479 | strategy_logic=avg:0.11ms max:18.44ms n=12479 | total=avg:0.19ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] max:18.53ms n=12479",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.350 TRACE:: Log: PERF_FINAL META | data_manager=avg:0.00ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] max:0.03ms n=12480 | rally_update=avg:0.01ms max:0.12ms n=12479 |",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] metrics=avg:0.05ms max:2.81ms n=12479 | risk_checks=avg:0.00ms max:2.16ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] n=12479 | strategy_logic=avg:0.06ms max:3.22ms n=12479 | total=avg:0.14ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] max:3.30ms n=12479",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.350 TRACE:: Log: PERF_FINAL NVDA | data_manager=avg:0.00ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] max:0.54ms n=12480 | rally_update=avg:0.01ms max:9.85ms n=12479 |",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] metrics=avg:0.05ms max:0.18ms n=12479 | risk_checks=avg:0.00ms max:0.05ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] n=12479 | strategy_logic=avg:0.11ms max:4.88ms n=12479 | total=avg:0.19ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] max:10.21ms n=12479",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.350 TRACE:: Log: PERF_FINAL OXY | data_manager=avg:0.00ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] max:0.05ms n=12480 | rally_update=avg:0.01ms max:0.09ms n=12479 |",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] metrics=avg:0.05ms max:1.62ms n=12479 | risk_checks=avg:0.00ms max:0.03ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] n=12479 | strategy_logic=avg:0.10ms max:7.70ms n=12479 | total=avg:0.18ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] max:7.82ms n=12479",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.350 TRACE:: Log: PERF_FINAL SHOP | data_manager=avg:0.00ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] max:0.05ms n=12480 | rally_update=avg:0.01ms max:0.05ms n=12479 |",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] metrics=avg:0.05ms max:15.60ms n=12479 | risk_checks=avg:0.00ms max:0.08ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] n=12479 | strategy_logic=avg:0.09ms max:2.97ms n=12479 | total=avg:0.17ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] max:16.03ms n=12479",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.350 TRACE:: Log: PERF_FINAL TSLA | data_manager=avg:0.00ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] max:0.04ms n=12480 | rally_update=avg:0.01ms max:0.09ms n=12479 |",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] metrics=avg:0.05ms max:4.15ms n=12479 | risk_checks=avg:0.00ms max:0.39ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] n=12479 | strategy_logic=avg:0.08ms max:25.03ms n=12479 | total=avg:0.16ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] max:25.14ms n=12479",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.350 TRACE:: Log: PERF_FINAL UBER | data_manager=avg:0.00ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] max:0.03ms n=12480 | rally_update=avg:0.01ms max:0.06ms n=12479 |",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] metrics=avg:0.05ms max:4.26ms n=12479 | risk_checks=avg:0.00ms max:0.07ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] n=12479 | strategy_logic=avg:0.09ms max:6.03ms n=12479 | total=avg:0.17ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] max:6.14ms n=12479",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.351 TRACE:: Log: PERF_FINAL V | data_manager=avg:0.00ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] max:0.06ms n=12480 | rally_update=avg:0.01ms max:0.11ms n=12479 |",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] metrics=avg:0.05ms max:2.86ms n=12479 | risk_checks=avg:0.00ms max:0.05ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] n=12479 | strategy_logic=avg:0.11ms max:3.51ms n=12479 | total=avg:0.19ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] max:3.60ms n=12479",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.351 TRACE:: Log: PERF_FINAL_AGG data_manager=avg:0.00ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] max:0.54ms n=187200 | metrics=avg:0.05ms max:15.60ms n=187185 |",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] rally_update=avg:0.01ms max:9.85ms n=187185 | risk_checks=avg:0.00ms max:2.16ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] n=187185 | strategy_logic=avg:0.09ms max:28.01ms n=187185 | total=avg:0.17ms",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] max:28.10ms n=187185",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.351 TRACE:: Debug: Algorithm Id:(1729485007) completed in",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 61.32 seconds at 46k data points per second. Processing total of 2,808,751 data",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] points.",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.351 TRACE:: Debug: Your log was successfully created and can",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] be retrieved from: /Results/1729485007-log.txt",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.351 TRACE:: BacktestingResultHandler.Run(): Ending Thread...",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.394 TRACE::",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] STATISTICS:: Total Orders 89",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] STATISTICS:: Average Win 0.06%",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] STATISTICS:: Average Loss 0.00%",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] STATISTICS:: Compounding Annual Return 8.652%",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] STATISTICS:: Drawdown 0.300%",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] STATISTICS:: Expectancy 9.709",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] STATISTICS:: Start Equity 500000",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] STATISTICS:: End Equity 501100.07",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] STATISTICS:: Net Profit 0.220%",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] STATISTICS:: Sharpe Ratio 0.016",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] STATISTICS:: Sortino Ratio 0",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] STATISTICS:: Probabilistic Sharpe Ratio 96.997%",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] STATISTICS:: Loss Rate 33%",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] STATISTICS:: Win Rate 67%",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] STATISTICS:: Profit-Loss Ratio 15.06",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] STATISTICS:: Alpha 0",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] STATISTICS:: Beta 0",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] STATISTICS:: Annual Standard Deviation 0.009",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] STATISTICS:: Annual Variance 0",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] STATISTICS:: Information Ratio 5.819",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] STATISTICS:: Tracking Error 0.009",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] STATISTICS:: Treynor Ratio 0",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] STATISTICS:: Total Fees $76.25",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] STATISTICS:: Estimated Strategy Capacity $9800000.00",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] STATISTICS:: Lowest Capacity Asset ABBV 2T",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] STATISTICS:: Portfolio Turnover 71.88%",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] STATISTICS:: Drawdown Recovery 1",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] STATISTICS:: OrderListHash 84e79bd641b57df60c29386afb1ecca5",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.394 TRACE:: BacktestingResultHandler.SendAnalysisResult():",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] Processed final packet",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.395 TRACE:: Engine.Run(): Disconnecting from brokerage...",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.395 TRACE:: Engine.Run(): Disposing of setup handler...",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.395 TRACE:: Engine.Main(): Analysis Completed and Results",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] Posted.",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.395 TRACE:: DataMonitor.Exit(): start...",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.395 TRACE:: StopSafely(): Waiting for '' thread to stop...",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.397 TRACE:: DataMonitor.GenerateReport():",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] DATA USAGE:: Total data requests 257",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] DATA USAGE:: Succeeded data requests 122",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] DATA USAGE:: Failed data requests 135",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] DATA USAGE:: Failed data requests percentage 53%",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] DATA USAGE:: Total universe data requests 0",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] DATA USAGE:: Succeeded universe data requests 0",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] DATA USAGE:: Failed universe data requests 0",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] DATA USAGE:: Failed universe data requests percentage 0%",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.399 TRACE:: DataMonitor.Exit(): end",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] Engine.Main(): Analysis Complete.",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.401 TRACE:: Engine.Main(): Packet removed from queue:",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 1729485007",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.401 TRACE:: LeanEngineSystemHandlers.Dispose(): start...",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.402 TRACE:: LeanEngineSystemHandlers.Dispose(): Disposed of",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] system handlers.",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.402 TRACE:: LeanEngineAlgorithmHandlers.Dispose(): start...",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.402 TRACE:: LocalObjectStore.Dispose(): start...",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.402 TRACE:: LocalObjectStore.Dispose(): end",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.402 TRACE:: LeanEngineAlgorithmHandlers.Dispose(): Disposed of",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] algorithm handlers.",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.403 TRACE:: StopSafely(): Waiting for 'CpuPerformance' thread",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] to stop...",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:14.403 TRACE:: PythonInitializer.Shutdown(): start",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:14"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:16.042 TRACE:: PythonInitializer.Shutdown(): ended",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:16"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] 20251016 11:18:16.042 TRACE:: Program.Main(): Exiting Lean...",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:16"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] Successfully ran 'ZacQC' in the 'backtesting' environment and stored the output",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:16"
+    },
+    {
+      "message": "[BACKTEST EXECUTION] in 'ZacQC/backtests/2025-10-16_14-17-08'",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:16"
+    },
+    {
+      "message": "✅ [BACKTEST EXECUTION] Backtest completed successfully",
+      "phase": "backtest_execution",
+      "timestamp": "14:18:16"
+    },
+    {
+      "message": "Found backtest results: /Users/ahmedkhattab/Desktop/Projects/Zac/zac_qc/ZacQC/backtests/2025-10-16_14-17-08/1729485007.json",
+      "timestamp": "14:18:16"
+    }
+  ]
+}
