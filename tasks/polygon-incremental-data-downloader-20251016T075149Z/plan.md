@@ -47,11 +47,11 @@ Duplicate the following story block for each user story in scope. Execute the cl
 - Data/backfill: Not applicable (no historical migration needed)
 
 #### Tasks Checklist
-- [ ] Document Lean trade zip schema by inspecting current samples and capture in module docs/tests.
-- [ ] Implement Polygon REST client with rate limiting, retries, and chunked requests per symbol/resolution.
-- [ ] Build incremental storage pipeline that lowercases symbols, writes temp files, and atomically swaps to final `_trade.zip` outputs.
-- [ ] Add unit and integration tests covering gap detection, skip-on-cache, and successful download paths, using short date ranges to keep runtime low.
-- [ ] Add a mandatory live integration test harness that calls Polygon with a one-day window; fail loudly if a Polygon key is absent in environments where tests run.
+- [x] Document Lean trade zip schema by inspecting current samples and capture in module docs/tests.
+- [x] Implement Polygon REST client with rate limiting, retries, and chunked requests per symbol/resolution.
+- [x] Build incremental storage pipeline that lowercases symbols, writes temp files, and atomically swaps to final `_trade.zip` outputs.
+- [x] Add unit and integration tests covering gap detection, skip-on-cache, and successful download paths, using short date ranges to keep runtime low.
+- [x] Add a mandatory live integration test harness that calls Polygon with a one-day window; fail loudly if a Polygon key is absent in environments where tests run.
 
 #### Story Tests to Run
 - Unit/Integration: `pytest -q tests/unit/test_polygon_downloader.py` and `pytest -q tests/integration/test_polygon_downloader_incremental.py`
@@ -114,11 +114,11 @@ Stop conditions: 3 loops without measurable progress, or time-box exceeded → s
 - Data/backfill: N/A (relies on existing files)
 
 #### Tasks Checklist
-- [ ] Add configuration/feature flag (env or config) to toggle between CLI and native downloader during rollout.
-- [ ] Refactor `BacktestManager` download path to call the new module, passing symbols/resolutions and capturing progress updates while defaulting tests to short date windows.
-- [ ] Update logging/metrics to include downloader stats (cache hits, API call counts, duration) and remove CLI-specific messaging.
-- [ ] Write integration tests for `BacktestManager` to validate success, cache-only, and retry/failure flows using mocks over short sample periods to keep runtime low.
-- [ ] Add a live end-to-end backtest test that exercises the new downloader against Polygon over a one-day window and ensures logs capture real download timings.
+- [x] Add configuration/feature flag (env or config) to toggle between CLI and native downloader during rollout.
+- [x] Refactor `BacktestManager` download path to call the new module, passing symbols/resolutions and capturing progress updates while defaulting tests to short date windows.
+- [x] Update logging/metrics to include downloader stats (cache hits, API call counts, duration) and remove CLI-specific messaging.
+- [x] Write integration tests for `BacktestManager` to validate success, cache-only, and retry/failure flows using mocks over short sample periods to keep runtime low.
+- [x] Add a live end-to-end backtest test that exercises the new downloader against Polygon over a one-day window and ensures logs capture real download timings.
 
 #### Story Tests to Run
 - Unit/Integration: `pytest -q tests/integration/test_backtest_manager_downloader.py`
@@ -162,6 +162,7 @@ Stop conditions: 3 loops without measurable progress, or time-box exceeded → s
 
 #### Links/Artifacts
 - Release note stub: TBD
+- Documentation: `Experts/polygon_incremental_downloader.md`
 
 ### Story [S-3]: Benchmark and document performance gains
 - Story ID: S-3 | Priority: P1 | Owner: Codex | Due: 2025-10-24
@@ -179,9 +180,9 @@ Stop conditions: 3 loops without measurable progress, or time-box exceeded → s
 - Data/backfill: N/A
 
 #### Tasks Checklist
-- [ ] Implement a reproducible benchmark script comparing CLI vs native downloader across representative workloads against the live Polygon API, defaulting to short date windows with an option to scale up for deeper analysis.
-- [ ] Capture and store results (timings, API counts) under `$FEATURE_DIR/benchmarks/` and update Decision Log with summary.
-- [ ] Update documentation (`Experts/` or README) to describe new downloader usage, configuration flags, and fallback.
+- [x] Implement a reproducible benchmark script comparing CLI vs native downloader across representative workloads against the live Polygon API, defaulting to short date windows with an option to scale up for deeper analysis.
+- [x] Capture and store results (timings, API counts) under `$FEATURE_DIR/benchmarks/` and update Decision Log with summary.
+- [x] Update documentation (`Experts/` or README) to describe new downloader usage, configuration flags, and fallback.
 
 #### Story Tests to Run
 - Unit/Integration: `pytest -q tests/benchmarks/test_downloader_benchmarks.py`
@@ -227,13 +228,13 @@ Stop conditions: 3 loops without measurable progress, or time-box exceeded → s
 - Benchmark report: TBD
 
 ## Checklist of Subtasks
-- [ ] Plan & Setup (repo/env ready, confirm requirements)
-- [ ] Design Solution (modules, data flow, interfaces)
-- [ ] Implement Core Functionality (primary logic, edge cases)
-- [ ] Integrate Components (wire modules, data contracts)
-- [ ] Testing (unit/integration/e2e as applicable)
-- [ ] Optimization (refactor/perf/quality passes)
-- [ ] Documentation & Final Review (README, examples)
+- [x] Plan & Setup (repo/env ready, confirm requirements)
+- [x] Design Solution (modules, data flow, interfaces)
+- [x] Implement Core Functionality (primary logic, edge cases)
+- [x] Integrate Components (wire modules, data contracts)
+- [x] Testing (unit/integration/e2e as applicable)
+- [x] Optimization (refactor/perf/quality passes)
+- [x] Documentation & Final Review (README, examples)
 
 ## Definition of Done (DoD)
 - Functional: Downloader covers Daily/Minute/Second equity trade data with gap-aware fetch and Lean-compatible output.

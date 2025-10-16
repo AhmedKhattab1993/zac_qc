@@ -16,8 +16,20 @@ import socket
 import logging
 import logging.handlers
 import shutil
-from datetime import datetime
+import time
+from datetime import datetime, date
+from pathlib import Path
+
+from dateutil.relativedelta import relativedelta
+
 from .trading_calendar import USEquityTradingCalendar
+from .data_download.data_store import LeanDataStore
+from .data_download.lean_schema import Resolution
+from .data_download.polygon_downloader import (
+    PolygonIncrementalDownloader,
+    DownloadSummary,
+)
+from .data_download.polygon_client import PolygonAPIError, PolygonRateLimitError
 
 # Add parent directory to path for config imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -361,8 +373,15 @@ DISABLE_DATA_DOWNLOAD = False  # Set to True to skip all data downloads and use 
 # Config file path - use ZacQC/config/parameters.py directly as requested
 CONFIG_FILE_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "ZacQC", "config", "parameters.py")
 
+
+def _env_flag(name: str, default: bool) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
 class BacktestManager:
-    def __init__(self):
+    def __init__(self, *, data_root=None, downloader_factory=None):
         self.process = None
         self.download_process = None  # Track download process for cancellation
         self.status = "idle"  # idle, downloading_data, running_backtest, completed, error, cancelled
@@ -376,8 +395,22 @@ class BacktestManager:
         self.download_symbols = []
         self.download_date_range = {}
         self.download_progress = {}
+        self._project_root = Path(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        self._data_root = Path(data_root) if data_root else self._project_root / "data"
+        self._downloader_factory = downloader_factory or self._default_downloader_factory
+        self._last_download_summary = None
+        self._last_download_method = None
+
+    def _default_downloader_factory(self, api_key, calendar):
+        store = LeanDataStore(self._data_root)
+        return PolygonIncrementalDownloader(
+            api_key=api_key,
+            data_store=store,
+            calendar=calendar,
+            logger=backtest_logger,
+        )
     
-    def _check_data_availability(self, symbols, start_date, end_date, polygon_api_key):
+    def _check_data_availability(self, symbols, start_date, end_date, calendar):
         """Check if second-level trading data is available for all symbols and trading days"""
         import os
         
@@ -392,11 +425,14 @@ class BacktestManager:
         available_symbols = []  # List of symbols with complete data
         
         # Get base data directory
-        base_data_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "equity", "usa", "second")
+        base_data_dir = self._data_root / "equity" / "usa" / "second"
+        trading_days = []
+        if calendar:
+            trading_days = calendar.get_trading_days(start_dt.date(), end_dt.date())
         
         for symbol in symbols:
             symbol_lower = symbol.lower()
-            symbol_dir = os.path.join(base_data_dir, symbol_lower)
+            symbol_dir = base_data_dir / symbol_lower
             
             self.logs.append({
                 "timestamp": datetime.now().strftime("%H:%M:%S"),
@@ -404,16 +440,12 @@ class BacktestManager:
                 "phase": "data_download"
             })
             
-            if not os.path.exists(symbol_dir):
+            if not symbol_dir.exists():
                 missing_symbols.append(symbol)
                 backtest_logger.warning(f"🔍 DATA CHECK: Missing directory for {symbol} - needs download")
                 continue
-            
-            # Initialize trading calendar for accurate trading day validation
-            trading_calendar = USEquityTradingCalendar(polygon_api_key)
-            
+
             # Get actual trading days (excludes weekends AND market holidays)
-            trading_days = trading_calendar.get_trading_days(start_dt.date(), end_dt.date())
             
             symbol_missing_days = []
             symbol_available_days = []
@@ -422,9 +454,9 @@ class BacktestManager:
             for trading_day in trading_days:
                 date_str = trading_day.strftime('%Y%m%d')
                 trade_file = f"{date_str}_trade.zip"
-                trade_path = os.path.join(symbol_dir, trade_file)
+                trade_path = symbol_dir / trade_file
                 
-                if os.path.exists(trade_path):
+                if trade_path.exists():
                     symbol_available_days.append(date_str)
                 else:
                     symbol_missing_days.append(date_str)
@@ -461,6 +493,309 @@ class BacktestManager:
             })
             backtest_logger.info(f"🔍 DATA CHECK: Completed in {check_duration:.1f}s - All {len(symbols)} symbols have complete data")
             return True, available_symbols
+
+    def _merge_summaries(self, base_summary, additional_summary):
+        if base_summary is None:
+            base_summary = DownloadSummary()
+        if additional_summary is None:
+            return base_summary
+        for event in additional_summary.events:
+            base_summary.add_event(event)
+        base_summary.http_requests += additional_summary.http_requests
+        return base_summary
+
+    def _run_polygon_native_download(
+        self,
+        *,
+        symbols,
+        start_date,
+        end_date,
+        extended_start_date,
+        polygon_api_key,
+        calendar,
+        seconds_symbols,
+    ):
+        downloader = self._downloader_factory(polygon_api_key, calendar)
+
+        self.logs.append({
+            "timestamp": datetime.now().strftime("%H:%M:%S"),
+            "message": "🛠️ [DATA DOWNLOAD] Using native Polygon incremental downloader",
+            "phase": "data_download"
+        })
+        backtest_logger.info({
+            "event": "polygon_downloader_start",
+            "phase": "data_download",
+            "symbols": symbols,
+            "start": start_date.isoformat(),
+            "end": end_date.isoformat(),
+            "extended_start": extended_start_date.isoformat(),
+        })
+
+        self.download_start_time = datetime.now()
+
+        resolution_plan = [
+            (Resolution.DAILY, symbols, extended_start_date, end_date),
+            (Resolution.MINUTE, symbols, extended_start_date, end_date),
+        ]
+
+        second_targets = seconds_symbols if seconds_symbols else []
+        if second_targets:
+            resolution_plan.append((Resolution.SECOND, second_targets, start_date, end_date))
+
+        total_steps = len([plan for plan in resolution_plan if plan[1]])
+        step_index = 0
+        summary = DownloadSummary()
+        resolution_metrics = {}
+
+        for resolution, target_symbols, window_start, window_end in resolution_plan:
+            if not target_symbols:
+                continue
+
+            step_index += 1
+            self.download_progress = {
+                "current_step": step_index,
+                "total_steps": total_steps,
+                "current_resolution": resolution.value,
+                "current_symbols": ", ".join(target_symbols),
+            }
+
+            self.logs.append({
+                "timestamp": datetime.now().strftime("%H:%M:%S"),
+                "message": (
+                    f"⏱️ [DATA DOWNLOAD] Native step {step_index}/{total_steps}: "
+                    f"{resolution.value.title()} ({len(target_symbols)} symbols)"
+                ),
+                "phase": "data_download"
+            })
+            backtest_logger.info({
+                "event": "polygon_downloader_step",
+                "phase": "data_download",
+                "step": step_index,
+                "total_steps": total_steps,
+                "resolution": resolution.value,
+                "symbol_count": len(target_symbols),
+                "window_start": window_start.isoformat(),
+                "window_end": window_end.isoformat(),
+            })
+
+            step_begin = time.perf_counter()
+            step_summary = downloader.download(
+                target_symbols,
+                window_start,
+                window_end,
+                [resolution],
+            )
+            step_duration = time.perf_counter() - step_begin
+
+            summary = self._merge_summaries(summary, step_summary)
+
+            resolution_metrics[resolution.value] = {
+                "duration_sec": round(step_duration, 3),
+                "http_requests": step_summary.http_requests,
+                "downloaded": len([event for event in step_summary.events if event.status == "downloaded"]),
+                "cache_hits": step_summary.cache_hits,
+            }
+
+        self.download_end_time = datetime.now()
+        self.download_progress = {}
+
+        total_duration = (self.download_end_time - self.download_start_time).total_seconds()
+        downloaded_events = summary.downloaded_events()
+        total_bytes = sum(event.bytes_written for event in downloaded_events)
+
+        summary_payload = {
+            "event": "polygon_downloader_complete",
+            "phase": "data_download",
+            "duration_sec": round(total_duration, 3),
+            "http_requests": summary.http_requests,
+            "cache_hits": summary.cache_hits,
+            "downloaded_events": len(downloaded_events),
+            "bytes_written": total_bytes,
+            "resolutions": resolution_metrics,
+        }
+        backtest_logger.info(summary_payload)
+
+        self.logs.append({
+            "timestamp": datetime.now().strftime("%H:%M:%S"),
+            "message": (
+                f"✅ [DATA DOWNLOAD] Native downloader finished in {total_duration:.1f}s "
+                f"(downloads: {len(downloaded_events)}, cache hits: {summary.cache_hits})"
+            ),
+            "phase": "data_download"
+        })
+
+        self._last_download_summary = summary
+        return summary
+
+    def _run_cli_download(self, symbols, start_date, end_date, download_symbols, polygon_api_key):
+        self._last_download_summary = None
+        self.logs.append({
+            "timestamp": datetime.now().strftime("%H:%M:%S"),
+            "message": "🛠️ [DATA DOWNLOAD] Using Lean CLI downloader",
+            "phase": "data_download"
+        })
+        backtest_logger.info("🛠️ DATA DOWNLOAD: Falling back to Lean CLI downloader")
+
+        start_date_formatted = start_date.replace('-', '')
+        end_date_formatted = end_date.replace('-', '')
+
+        start_date_obj = datetime.strptime(start_date, '%Y-%m-%d')
+        extended_start_date_obj = start_date_obj - relativedelta(years=1)
+        extended_start_date_formatted = extended_start_date_obj.strftime('%Y%m%d')
+
+        self.download_start_time = datetime.now()
+
+        def batch_symbols(symbol_list, batch_size=1):
+            for i in range(0, len(symbol_list), batch_size):
+                yield symbol_list[i:i + batch_size]
+
+        if len(symbols) > 1:
+            self.logs.append({
+                "timestamp": datetime.now().strftime("%H:%M:%S"),
+                "message": f"⬇️ [DATA DOWNLOAD] Large symbol count ({len(symbols)}), will download in batches of 1",
+                "phase": "data_download"
+            })
+            backtest_logger.info(f"⬇️ DATA DOWNLOAD: Batching {len(symbols)} symbols into groups of 1")
+
+        self.logs.append({
+            "timestamp": datetime.now().strftime("%H:%M:%S"),
+            "message": f"📊 [DATA DOWNLOAD] Daily/Minute: 1 year extended ({extended_start_date_obj.strftime('%Y-%m-%d')} to {end_date})",
+            "phase": "data_download"
+        })
+        self.logs.append({
+            "timestamp": datetime.now().strftime("%H:%M:%S"),
+            "message": f"📊 [DATA DOWNLOAD] Second: Backtest range only ({start_date} to {end_date})",
+            "phase": "data_download"
+        })
+        backtest_logger.info(f"📊 Daily/Minute data: {extended_start_date_formatted} to {end_date_formatted} (1 year extended)")
+        backtest_logger.info(f"📊 Second data: {start_date_formatted} to {end_date_formatted} (backtest range only)")
+
+        download_commands = []
+
+        for batch_num, symbol_batch in enumerate(batch_symbols(symbols), 1):
+            batch_symbols_str = ','.join(symbol_batch)
+
+            daily_cmd = [
+                "lean", "data", "download",
+                "--data-provider-historical", "Polygon",
+                "--data-type", "Trade",
+                "--resolution", "Daily",
+                "--security-type", "Equity",
+                "--ticker", batch_symbols_str,
+                "--start", extended_start_date_formatted,
+                "--end", end_date_formatted,
+                "--polygon-api-key", polygon_api_key,
+                "--no-update"
+            ]
+            download_commands.append((f"Daily-Batch{batch_num}", daily_cmd))
+
+            minute_cmd = [
+                "lean", "data", "download",
+                "--data-provider-historical", "Polygon",
+                "--data-type", "Trade",
+                "--resolution", "Minute",
+                "--security-type", "Equity",
+                "--ticker", batch_symbols_str,
+                "--start", extended_start_date_formatted,
+                "--end", end_date_formatted,
+                "--polygon-api-key", polygon_api_key,
+                "--no-update"
+            ]
+            download_commands.append((f"Minute-Batch{batch_num}", minute_cmd))
+
+        if download_symbols:
+            for batch_num, symbol_batch in enumerate(batch_symbols(download_symbols), 1):
+                batch_symbols_str = ','.join(symbol_batch)
+
+                second_cmd = [
+                    "lean", "data", "download",
+                    "--data-provider-historical", "Polygon",
+                    "--data-type", "Trade",
+                    "--resolution", "Second",
+                    "--security-type", "Equity",
+                    "--ticker", batch_symbols_str,
+                    "--start", start_date_formatted,
+                    "--end", end_date_formatted,
+                    "--polygon-api-key", polygon_api_key,
+                    "--no-update"
+                ]
+                download_commands.append((f"Second-Batch{batch_num}", second_cmd))
+
+        total_downloads = len(download_commands)
+        all_downloads_successful = True
+        failed_resolutions = []
+
+        self.logs.append({
+            "timestamp": datetime.now().strftime("%H:%M:%S"),
+            "message": f"📊 [DATA DOWNLOAD] Total download tasks: {total_downloads} (in batches of 5 symbols)",
+            "phase": "data_download"
+        })
+        backtest_logger.info(f"📊 DATA DOWNLOAD: Starting {total_downloads} download tasks")
+
+        for step_num, (resolution, cmd) in enumerate(download_commands, 1):
+            ticker_index = cmd.index("--ticker") + 1 if "--ticker" in cmd else -1
+            symbols_in_batch = cmd[ticker_index] if ticker_index > 0 else "Unknown"
+
+            self.download_progress = {
+                "current_step": step_num,
+                "total_steps": total_downloads,
+                "current_resolution": resolution,
+                "current_symbols": symbols_in_batch
+            }
+
+            self.logs.append({
+                "timestamp": datetime.now().strftime("%H:%M:%S"),
+                "message": f"⏱️ [DATA DOWNLOAD] Step {step_num}/{total_downloads}: {resolution} - Symbols: {symbols_in_batch}",
+                "phase": "data_download"
+            })
+            backtest_logger.info(f"⏱️ DATA DOWNLOAD: Step {step_num}/{total_downloads} - {resolution}: {' '.join(cmd)}")
+
+            download_process = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
+            self.download_process = download_process
+            stdout, _ = download_process.communicate(input="usa\n")  # Mark stderr as intentionally unused
+
+            if download_process.returncode != 0:
+                all_downloads_successful = False
+                failed_resolutions.append(resolution)
+                self.logs.append({
+                    "timestamp": datetime.now().strftime("%H:%M:%S"),
+                    "message": f"❌ [DATA DOWNLOAD] {resolution} download failed: {stdout}",
+                    "phase": "data_download"
+                })
+                backtest_logger.error(f"❌ DATA DOWNLOAD: {resolution} failed: {stdout}")
+            else:
+                self.logs.append({
+                    "timestamp": datetime.now().strftime("%H:%M:%S"),
+                    "message": f"✅ [DATA DOWNLOAD] {resolution} download completed successfully",
+                    "phase": "data_download"
+                })
+                backtest_logger.info(f"✅ DATA DOWNLOAD: {resolution} completed successfully")
+
+        self.download_process = None
+        self.download_progress = {}
+        self.download_end_time = datetime.now()
+        download_duration = (self.download_end_time - self.download_start_time).total_seconds()
+
+        if all_downloads_successful:
+            self.logs.append({
+                "timestamp": datetime.now().strftime("%H:%M:%S"),
+                "message": f"✅ [DATA DOWNLOAD] All downloads completed successfully in {download_duration:.1f}s",
+                "phase": "data_download"
+            })
+            backtest_logger.info(f"✅ DATA DOWNLOAD: All downloads completed successfully in {download_duration:.1f}s")
+        else:
+            self.logs.append({
+                "timestamp": datetime.now().strftime("%H:%M:%S"),
+                "message": f"❌ [DATA DOWNLOAD] Download failed after {download_duration:.1f}s - Failed resolutions: {', '.join(failed_resolutions)}",
+                "phase": "data_download"
+            })
+            backtest_logger.error(f"❌ DATA DOWNLOAD: Failed after {download_duration:.1f}s. Failed resolutions: {', '.join(failed_resolutions)}")
+
+            self.status = "error"
+            self.end_time = datetime.now()
+            return False
+
+        return True
     
     def _start_lean_execution(self, algorithm_name, config_params):
         """Start the Lean backtest execution"""
@@ -634,9 +969,15 @@ class BacktestManager:
             with open(lean_config_path, 'r') as f:
                 lean_config = json.load(f)
             polygon_api_key = lean_config.get('polygon-api-key', '')
+            calendar = USEquityTradingCalendar(polygon_api_key)
             
             # Check data availability before proceeding with download
-            data_available, missing_symbols = self._check_data_availability(symbols, start_date, end_date, polygon_api_key)
+            data_available, missing_symbols = self._check_data_availability(
+                symbols,
+                start_date,
+                end_date,
+                calendar,
+            )
             
             # Always download Daily and Minute data, but check Seconds data availability
             self.logs.append({
@@ -699,210 +1040,119 @@ class BacktestManager:
             })
             backtest_logger.info("🚀 DATA DOWNLOAD: Starting download process")
         
-        try:
-            if should_download:
-                # Convert date format for lean command (YYYYMMDD)
-                start_date_formatted = start_date.replace('-', '')
-                end_date_formatted = end_date.replace('-', '')
-                
-                # Calculate extended date range for Daily and Minute data (1 year before start date)
-                from dateutil.relativedelta import relativedelta
-                start_date_obj = datetime.strptime(start_date, '%Y-%m-%d')
-                extended_start_date_obj = start_date_obj - relativedelta(years=1)
-                extended_start_date_formatted = extended_start_date_obj.strftime('%Y%m%d')
-                
-                # API key already loaded above for trading calendar
-            
-            if should_download and polygon_api_key:
-                # Function to batch symbols to avoid command line length issues
-                def batch_symbols(symbol_list, batch_size=1):
-                    """Split symbols into batches to avoid command line length issues"""
-                    for i in range(0, len(symbol_list), batch_size):
-                        yield symbol_list[i:i + batch_size]
-                
-                # Check if we need to batch symbols
-                if len(symbols) > 1:
-                    self.logs.append({
-                        "timestamp": datetime.now().strftime("%H:%M:%S"),
-                        "message": f"⬇️ [DATA DOWNLOAD] Large symbol count ({len(symbols)}), will download in batches of 1",
-                        "phase": "data_download"
-                    })
-                    backtest_logger.info(f"⬇️ DATA DOWNLOAD: Batching {len(symbols)} symbols into groups of 1")
-                
-                self.logs.append({
-                    "timestamp": datetime.now().strftime("%H:%M:%S"),
-                    "message": f"📊 [DATA DOWNLOAD] Daily/Minute: 1 year extended ({extended_start_date_obj.strftime('%Y-%m-%d')} to {end_date})",
-                    "phase": "data_download"
-                })
-                self.logs.append({
-                    "timestamp": datetime.now().strftime("%H:%M:%S"),
-                    "message": f"📊 [DATA DOWNLOAD] Second: Backtest range only ({start_date} to {end_date})",
-                    "phase": "data_download"
-                })
-                backtest_logger.info(f"📊 Daily/Minute data: {extended_start_date_formatted} to {end_date_formatted} (1 year extended)")
-                backtest_logger.info(f"📊 Second data: {start_date_formatted} to {end_date_formatted} (backtest range only)")
-                
-                # Create download commands for each batch
-                download_commands = []
-                
-                # Batch symbols for Daily and Minute downloads
-                for batch_num, symbol_batch in enumerate(batch_symbols(symbols), 1):
-                    batch_symbols_str = ','.join(symbol_batch)
-                    
-                    # Daily data command
-                    daily_cmd = [
-                        "lean", "data", "download",
-                        "--data-provider-historical", "Polygon",
-                        "--data-type", "Trade",
-                        "--resolution", "Daily",
-                        "--security-type", "Equity",
-                        "--ticker", batch_symbols_str,
-                        "--start", extended_start_date_formatted,
-                        "--end", end_date_formatted,
-                        "--polygon-api-key", polygon_api_key,
-                        "--no-update"
-                    ]
-                    download_commands.append((f"Daily-Batch{batch_num}", daily_cmd))
-                    
-                    # Minute data command
-                    minute_cmd = [
-                        "lean", "data", "download",
-                        "--data-provider-historical", "Polygon",
-                        "--data-type", "Trade",
-                        "--resolution", "Minute",
-                        "--security-type", "Equity",
-                        "--ticker", batch_symbols_str,
-                        "--start", extended_start_date_formatted,
-                        "--end", end_date_formatted,
-                        "--polygon-api-key", polygon_api_key,
-                        "--no-update"
-                    ]
-                    download_commands.append((f"Minute-Batch{batch_num}", minute_cmd))
-                
-                # Batch symbols for Second downloads (only missing symbols)
-                if download_symbols:
-                    for batch_num, symbol_batch in enumerate(batch_symbols(download_symbols), 1):
-                        batch_symbols_str = ','.join(symbol_batch)
-                        
-                        second_cmd = [
-                            "lean", "data", "download",
-                            "--data-provider-historical", "Polygon",
-                            "--data-type", "Trade",
-                            "--resolution", "Second",
-                            "--security-type", "Equity",
-                            "--ticker", batch_symbols_str,
-                            "--start", start_date_formatted,
-                            "--end", end_date_formatted,
-                            "--polygon-api-key", polygon_api_key,
-                            "--no-update"
-                        ]
-                        download_commands.append((f"Second-Batch{batch_num}", second_cmd))
-                
-                # Track download timing
-                self.download_start_time = datetime.now()
-                
-                total_downloads = len(download_commands)
-                all_downloads_successful = True
-                failed_resolutions = []
-                
-                self.logs.append({
-                    "timestamp": datetime.now().strftime("%H:%M:%S"),
-                    "message": f"📊 [DATA DOWNLOAD] Total download tasks: {total_downloads} (in batches of 5 symbols)",
-                    "phase": "data_download"
-                })
-                backtest_logger.info(f"📊 DATA DOWNLOAD: Starting {total_downloads} download tasks")
-                
-                for step_num, (resolution, cmd) in enumerate(download_commands, 1):
-                    # Extract symbols from the command for clearer logging
-                    ticker_index = cmd.index("--ticker") + 1 if "--ticker" in cmd else -1
-                    symbols_in_batch = cmd[ticker_index] if ticker_index > 0 else "Unknown"
-                    
-                    # Update download progress
-                    self.download_progress = {
-                        "current_step": step_num,
-                        "total_steps": total_downloads,
-                        "current_resolution": resolution,
-                        "current_symbols": symbols_in_batch
-                    }
-                    
-                    self.logs.append({
-                        "timestamp": datetime.now().strftime("%H:%M:%S"),
-                        "message": f"⏱️ [DATA DOWNLOAD] Step {step_num}/{total_downloads}: {resolution} - Symbols: {symbols_in_batch}",
-                        "phase": "data_download"
-                    })
-                    backtest_logger.info(f"⏱️ DATA DOWNLOAD: Step {step_num}/{total_downloads} - {resolution}: {' '.join(cmd)}")
-                    
-                    # Handle market selection for each download
-                    download_process = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
-                    
-                    # Automatically select 'usa' market
-                    stdout, _ = download_process.communicate(input="usa\n")  # Mark stderr as intentionally unused
-                    
-                    if download_process.returncode != 0:
-                        all_downloads_successful = False
-                        failed_resolutions.append(resolution)
-                        self.logs.append({
-                            "timestamp": datetime.now().strftime("%H:%M:%S"),
-                            "message": f"❌ [DATA DOWNLOAD] {resolution} download failed: {stdout}",
-                            "phase": "data_download"
-                        })
-                        backtest_logger.error(f"❌ DATA DOWNLOAD: {resolution} failed: {stdout}")
-                    else:
-                        self.logs.append({
-                            "timestamp": datetime.now().strftime("%H:%M:%S"),
-                            "message": f"✅ [DATA DOWNLOAD] {resolution} download completed successfully",
-                            "phase": "data_download"
-                        })
-                        backtest_logger.info(f"✅ DATA DOWNLOAD: {resolution} completed successfully")
-                
-                # Clear download process reference and progress
-                self.download_process = None
-                self.download_progress = {}  # Clear progress after completion
-                
-                self.download_end_time = datetime.now()
-                download_duration = (self.download_end_time - self.download_start_time).total_seconds()
-                
-                if all_downloads_successful:
-                    self.logs.append({
-                        "timestamp": datetime.now().strftime("%H:%M:%S"),
-                        "message": f"✅ [DATA DOWNLOAD] All downloads completed successfully in {download_duration:.1f}s",
-                        "phase": "data_download"
-                    })
-                    backtest_logger.info(f"✅ DATA DOWNLOAD: All downloads completed successfully in {download_duration:.1f}s")
-                else:
-                    self.logs.append({
-                        "timestamp": datetime.now().strftime("%H:%M:%S"),
-                        "message": f"❌ [DATA DOWNLOAD] Download failed after {download_duration:.1f}s - Failed resolutions: {', '.join(failed_resolutions)}",
-                        "phase": "data_download"
-                    })
-                    backtest_logger.error(f"❌ DATA DOWNLOAD: Failed after {download_duration:.1f}s. Failed resolutions: {', '.join(failed_resolutions)}")
-                    
-                    # Set error status and stop the backtest
-                    self.status = "error"
-                    self.end_time = datetime.now()
-                    return {"error": f"Data download failed for resolutions: {', '.join(failed_resolutions)}"}
-            elif should_download and not polygon_api_key:
+        self._last_download_method = None
+        if should_download:
+            self.logs.append({
+                "timestamp": datetime.now().strftime("%H:%M:%S"),
+                "message": "🚀 [DATA DOWNLOAD] Starting download process...",
+                "phase": "data_download"
+            })
+            backtest_logger.info("🚀 DATA DOWNLOAD: Starting download process")
+
+            use_native_downloader = _env_flag("USE_POLYGON_NATIVE_DOWNLOADER", True)
+            allow_cli_fallback = _env_flag("POLYGON_DOWNLOADER_ALLOW_CLI_FALLBACK", True)
+
+            start_date_dt = datetime.strptime(start_date, '%Y-%m-%d')
+            end_date_dt = datetime.strptime(end_date, '%Y-%m-%d')
+            start_date_date = start_date_dt.date()
+            end_date_date = end_date_dt.date()
+            extended_start_date_date = (start_date_dt - relativedelta(years=1)).date()
+
+            download_successful = False
+
+            if not polygon_api_key:
                 self.logs.append({
                     "timestamp": datetime.now().strftime("%H:%M:%S"),
                     "message": "⚠️ [DATA DOWNLOAD] No Polygon API key found, cannot download missing data",
                     "phase": "data_download"
                 })
                 backtest_logger.warning("⚠️ DATA DOWNLOAD: No Polygon API key found, cannot download missing data")
-            elif not should_download:
-                self.logs.append({
-                    "timestamp": datetime.now().strftime("%H:%M:%S"),
-                    "message": "⏭️ [DATA DOWNLOAD] Skipping download - all data available locally",
-                    "phase": "data_download"
-                })
-                backtest_logger.info("⏭️ DATA DOWNLOAD: Skipping download phase")
-                
-        except Exception as e:
+            else:
+                try:
+                    if use_native_downloader:
+                        seconds_targets = download_symbols if download_symbols else []
+                        self._last_download_method = "native"
+                        self._run_polygon_native_download(
+                            symbols=symbols,
+                            start_date=start_date_date,
+                            end_date=end_date_date,
+                            extended_start_date=extended_start_date_date,
+                            polygon_api_key=polygon_api_key,
+                            calendar=calendar,
+                            seconds_symbols=seconds_targets,
+                        )
+                        download_successful = True
+                    else:
+                        self._last_download_method = "cli"
+                        download_successful = self._run_cli_download(
+                            symbols,
+                            start_date,
+                            end_date,
+                            download_symbols,
+                            polygon_api_key,
+                        )
+                except (PolygonAPIError, PolygonRateLimitError) as exc:
+                    download_successful = False
+                    backtest_logger.exception("❌ DATA DOWNLOAD: Native Polygon downloader failed", exc_info=exc)
+                    self.logs.append({
+                        "timestamp": datetime.now().strftime("%H:%M:%S"),
+                        "message": f"❌ [DATA DOWNLOAD] Native downloader failed: {exc}",
+                        "phase": "data_download"
+                    })
+                    if use_native_downloader and allow_cli_fallback:
+                        self.logs.append({
+                            "timestamp": datetime.now().strftime("%H:%M:%S"),
+                            "message": "🔁 [DATA DOWNLOAD] Falling back to Lean CLI downloader",
+                            "phase": "data_download"
+                        })
+                        self._last_download_method = "cli_fallback"
+                        download_successful = self._run_cli_download(
+                            symbols,
+                            start_date,
+                            end_date,
+                            download_symbols,
+                            polygon_api_key,
+                        )
+                    else:
+                        self.status = "error"
+                        self.end_time = datetime.now()
+                        return {"error": f"Data download failed: {exc}"}
+                except Exception as exc:
+                    download_successful = False
+                    backtest_logger.exception("❌ DATA DOWNLOAD: Unexpected failure during download", exc_info=exc)
+                    self.logs.append({
+                        "timestamp": datetime.now().strftime("%H:%M:%S"),
+                        "message": f"❌ [DATA DOWNLOAD] Unexpected failure: {exc}",
+                        "phase": "data_download"
+                    })
+                    if use_native_downloader and allow_cli_fallback and polygon_api_key:
+                        self.logs.append({
+                            "timestamp": datetime.now().strftime("%H:%M:%S"),
+                            "message": "🔁 [DATA DOWNLOAD] Falling back to Lean CLI downloader",
+                            "phase": "data_download"
+                        })
+                        self._last_download_method = "cli_fallback"
+                        download_successful = self._run_cli_download(
+                            symbols,
+                            start_date,
+                            end_date,
+                            download_symbols,
+                            polygon_api_key,
+                        )
+                    else:
+                        self.status = "error"
+                        self.end_time = datetime.now()
+                        return {"error": f"Data download failed: {exc}"}
+
+                if not download_successful and self.status == "error":
+                    return {"error": "Data download failed"}
+        else:
             self.logs.append({
                 "timestamp": datetime.now().strftime("%H:%M:%S"),
-                "message": f"❌ [DATA DOWNLOAD] Data download failed: {e}",
+                "message": "⏭️ [DATA DOWNLOAD] Skipping download - all data available locally",
                 "phase": "data_download"
             })
-            backtest_logger.error(f"❌ DATA DOWNLOAD: Download process failed: {e}")
+            backtest_logger.info("⏭️ DATA DOWNLOAD: Skipping download phase")
 
         # Check if operation was cancelled before proceeding to backtest execution
         if self.status == "cancelled":
