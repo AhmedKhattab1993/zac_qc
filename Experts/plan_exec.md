@@ -142,32 +142,27 @@ Stop conditions (allowed pauses): `NEEDS_CLARIFICATION`, `BLOCKED`, 3 loops with
 - Artifacts: `$FEATURE_DIR/artifacts/` (screenshots under `artifacts/screenshots/`)
  
 #### Story Progress & Hygiene (per loop)
-- [ ] Update Tasks Checklist statuses (reflect current progress accurately)
-- [ ] Append Decision Log entry `[S-1]` with: timestamp, Attempt, Result, Evidence, Next step or Exit decision
-- [ ] Capture expertise: update `$FEATURE_DIR/referenced-expertise.md`; link context excerpts under `references/excerpts/`
-- [ ] Propose additions: update `$FEATURE_DIR/proposals/expert-additions.md` if guidance gaps exist
-- [ ] If E2E applies: record runtime vs budget and monitoring summary in the Decision Log
+- Update Tasks Checklist statuses (reflect current progress accurately)
+- Append Decision Log entry `[S-1]` with: timestamp, Attempt, Result, Evidence, Next step or Exit decision
+- Capture expertise: update `$FEATURE_DIR/referenced-expertise.md`; link context excerpts under `references/excerpts/`
+- Propose additions: update `$FEATURE_DIR/proposals/expert-additions.md` if guidance gaps exist
+- If E2E applies: record runtime vs budget and monitoring summary in the Decision Log
  
-#### Sub‑Agent Delegation (Codex CLI)
-- Tasks to delegate: <e.g., scaffold Playwright tests; generate page objects; seed test data; update CI config>
-- Inputs: <specs, AC, endpoints, mock data>
-- Acceptance: <what the sub‑agent must deliver (files/paths/tests)>
-
 #### Links/Artifacts
 - <PRs, tickets, docs>
 
 ## Checklist of Subtasks
-- [ ] Gate: confirm current story’s “Story Exit Checklist” is complete before starting the next story
-- [ ] Never‑Stop: after finishing a story, immediately start the next one (unless blocked)
-- [ ] All User Stories completed (each Exit Checklist fully checked)
-- [ ] Per-loop hygiene: update Tasks Checklist statuses, append Decision Log, capture expertise, propose expert additions if needed
-- [ ] Plan & Setup (repo/env ready, confirm requirements)
-- [ ] Design Solution (modules, data flow, interfaces)
-- [ ] Implement Core Functionality (primary logic, edge cases)
-- [ ] Integrate Components (wire modules, data contracts)
-- [ ] Testing (unit/integration/e2e as applicable)
-- [ ] Optimization (refactor/perf/quality passes)
-- [ ] Documentation & Final Review (README, examples)
+- Gate: confirm current story’s “Story Exit Checklist” is complete before starting the next story
+- Never‑Stop: after finishing a story, immediately start the next one (unless blocked)
+- All User Stories completed (each Exit Checklist fully checked)
+- Per-loop hygiene: update Tasks Checklist statuses, append Decision Log, capture expertise, propose expert additions if needed
+- Plan & Setup (repo/env ready, confirm requirements)
+- Design Solution (modules, data flow, interfaces)
+- Implement Core Functionality (primary logic, edge cases)
+- Integrate Components (wire modules, data contracts)
+- Testing (unit/integration/e2e as applicable)
+- Optimization (refactor/perf/quality passes)
+- Documentation & Final Review (README, examples)
 
 ## Definition of Done (DoD)
 - Functional: <behaviors pass acceptance tests>
@@ -441,10 +436,10 @@ Add `/health` endpoint to FastAPI app, returning build info and DB connectivity 
 - External: Postgres 14
 
 ## Checklist of Subtasks
-- [ ] Add route `GET /health` with JSON `{status, build, db}`
-- [ ] Implement DB ping with 100ms timeout
-- [ ] Unit tests for success and DB‑down cases
-- [ ] Update README with endpoint docs
+- Add route `GET /health` with JSON `{status, build, db}`
+- Implement DB ping with 100ms timeout
+- Unit tests for success and DB‑down cases
+- Update README with endpoint docs
 
 ## Definition of Done (DoD)
 - Functional: 200 OK with schema; 503 when DB ping fails
