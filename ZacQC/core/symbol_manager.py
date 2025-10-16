@@ -139,17 +139,15 @@ class SymbolManager:
                         time.perf_counter() - rally_start
                     )
             
-            entry_window_open = self.conditions_checker.is_entry_order_enabled(self.algorithm.Time)
-            metrics = None
-            if entry_window_open:
-                metrics_start = time.perf_counter() if perf_enabled else None
-                metrics = self.metrics_calculator.CalculateAllMetrics(data)
-                if perf_enabled and metrics_start is not None:
-                    self.algorithm.record_performance(
-                        self.symbol_name,
-                        'metrics',
-                        time.perf_counter() - metrics_start
-                    )
+            # Calculate basic metrics
+            metrics_start = time.perf_counter() if perf_enabled else None
+            metrics = self.metrics_calculator.CalculateAllMetrics(data)
+            if perf_enabled and metrics_start is not None:
+                self.algorithm.record_performance(
+                    self.symbol_name,
+                    'metrics',
+                    time.perf_counter() - metrics_start
+                )
             
             # Check gap threshold for all strategies (Reference implementation)
             risk_checks_start = time.perf_counter() if perf_enabled else None
@@ -172,57 +170,27 @@ class SymbolManager:
             
             # Process each strategy
             strategy_elapsed = 0.0
-            conditions_elapsed_total = 0.0
-            orders_elapsed_total = 0.0
             for strategy in self.strategies:
                 strategy_loop_start = time.perf_counter() if perf_enabled else None
-                cond_elapsed, order_elapsed = self.ProcessBasicStrategy(strategy, data, metrics)
-                conditions_elapsed_total += cond_elapsed
-                orders_elapsed_total += order_elapsed
+                self.ProcessBasicStrategy(strategy, data, metrics)
                 
                 # Phase 3: Continuous VWAP monitoring for order cancellation
                 if hasattr(self.order_manager, 'monitor_vwap_conditions'):
-                    monitor_start = time.perf_counter() if perf_enabled else None
                     self.order_manager.monitor_vwap_conditions()
-                    if perf_enabled and monitor_start is not None:
-                        orders_elapsed_total += time.perf_counter() - monitor_start
                 
                 # Range-based order cancellation monitoring (Reference: ib.py cancel_long/cancel_short)
                 if hasattr(self.order_manager, 'monitor_range_based_cancellations'):
-                    range_cancel_start = time.perf_counter() if perf_enabled else None
                     self.order_manager.monitor_range_based_cancellations()
-                    if perf_enabled and range_cancel_start is not None:
-                        orders_elapsed_total += time.perf_counter() - range_cancel_start
                 
                 # Update stop loss orders based on profit thresholds (Reference: ib.py update_stop_loss)
                 if hasattr(self.order_manager, 'update_stop_loss'):
-                    update_stop_start = time.perf_counter() if perf_enabled else None
                     self.order_manager.update_stop_loss()
-                    if perf_enabled and update_stop_start is not None:
-                        orders_elapsed_total += time.perf_counter() - update_stop_start
                 
                 # ACTION TIME: Update trade time actions if enabled (Reference: ib.py lines 2882-2891)
-                action_start = time.perf_counter() if perf_enabled else None
                 self.update_trade_time_actions(data[self.symbol].Close)
-                if perf_enabled and action_start is not None:
-                    orders_elapsed_total += time.perf_counter() - action_start
                 
                 if perf_enabled and strategy_loop_start is not None:
                     strategy_elapsed += time.perf_counter() - strategy_loop_start
-
-            if perf_enabled:
-                if conditions_elapsed_total:
-                    self.algorithm.record_performance(
-                        self.symbol_name,
-                        'conditions_eval',
-                        conditions_elapsed_total
-                    )
-                if orders_elapsed_total:
-                    self.algorithm.record_performance(
-                        self.symbol_name,
-                        'order_management',
-                        orders_elapsed_total
-                    )
             
             if perf_enabled:
                 self.algorithm.record_performance(
@@ -249,42 +217,34 @@ class SymbolManager:
         
         current_time = self.algorithm.Time
         current_price = data[self.symbol].Close
-        perf_enabled = hasattr(self.algorithm, 'record_performance')
-        conditions_elapsed = 0.0
-        orders_elapsed = 0.0
         
         # Skip trading if disabled by any threshold (gap, range, liquidity)
         if not strategy.trading_enabled:
-            return (conditions_elapsed, orders_elapsed)
+            return
 
-        if metrics is None:
-            return (conditions_elapsed, orders_elapsed)
-
+        # Skip condition evaluation when entry window is closed
+        if not self.conditions_checker.is_entry_order_enabled(current_time):
+            return
+        
         # Check liquidity threshold (Reference implementation)
         if not self.check_liquidity_threshold(metrics):
-            return (conditions_elapsed, orders_elapsed)
-
+            return
+        
         # CRITICAL: Check daily P&L limit before evaluating any conditions
         # This prevents new orders from being placed when daily limit is reached
         if hasattr(self.algorithm, 'risk_manager') and hasattr(self.algorithm.risk_manager, 'daily_limit_reached'):
             if self.algorithm.risk_manager.daily_limit_reached:
                 # Skip all condition checking if daily limit was already hit
-                return (conditions_elapsed, orders_elapsed)
+                return
         
         # Check all conditions
-        cond_start = time.perf_counter() if perf_enabled else None
         conditions = self.conditions_checker.CheckAllConditions(strategy, metrics, current_time)
-        if perf_enabled and cond_start is not None:
-            conditions_elapsed += time.perf_counter() - cond_start
         
         # Execute trades based on met conditions
         for condition, is_met in conditions.items():
             if is_met:
                 # CRITICAL FIX: Check timing constraints before placing any order
-                order_start = time.perf_counter() if perf_enabled else None
                 if not self.ValidateTimingConstraints(condition):
-                    if perf_enabled and order_start is not None:
-                        orders_elapsed += time.perf_counter() - order_start
                     continue  # Skip this condition if timing constraints are not met
                 
                 order_placed = False
@@ -296,10 +256,6 @@ class SymbolManager:
                 
                 # NOTE: Execution times are updated when positions EXIT, not when orders are placed
                 # This happens in order_manager._handle_sltp_fill_and_cancel_counterpart
-                if perf_enabled and order_start is not None:
-                    orders_elapsed += time.perf_counter() - order_start
-
-        return (conditions_elapsed, orders_elapsed)
     
     def OnOrderEvent(self, orderEvent):
         """Handle order events for this symbol"""

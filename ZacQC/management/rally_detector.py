@@ -35,16 +35,15 @@ class RallyDetector:
         self.data_cache = {}  # Store 15-second price data per symbol
         self.market_open = time(9, 30)  # 9:30 AM
         self.market_close = time(15, 59)  # 3:59 PM
-        # Keep a bounded window of 15-second samples tuned to rally constraints
-        window_minutes = max(float(params.Rally_Time_Constraint) * 4.0, 120.0)
-        self.max_entries = int(window_minutes * 4)  # 4 samples per minute
+        # Keep up to four hours of 15-second samples in memory per symbol
+        self.max_entries = 4 * 60 * 4
         self._state = {}
         self._rally_x_min = params.Rally_X_Min_PCT / 100.0
         self._rally_x_max = params.Rally_X_Max_PCT / 100.0
         self._rally_y_threshold = params.Rally_Y_PCT / 100.0
         self._time_constraint_threshold = params.Rally_Time_Constraint_Threshold
         self._time_constraint_minutes = float(params.Rally_Time_Constraint)
-        self._prune_window = timedelta(minutes=window_minutes)
+        self._prune_window = timedelta(hours=4)
         self._session_date = None
         self._session_open_dt = None
         

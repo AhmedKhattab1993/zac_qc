@@ -44,11 +44,9 @@ class MetricsCalculator:
         
         if self.data_manager.bars_15s.Count < 2:
             return self.metrics
-
+        
         current_price = data[self.algorithm.symbol].Close
-        self.metrics['actual_p1'] = self.actual_p1
-        self.metrics['actual_p2'] = self.actual_p2
-
+        
         # Calculate Reference Parameter-based metrics
         self.CalculateReferenceParameterMetrics()
         
