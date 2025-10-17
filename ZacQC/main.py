@@ -54,6 +54,7 @@ class ZacReferenceAlgorithm(QCAlgorithm):
             # Capture cumulative performance stats for end-of-run profiling
             self.performance_cumulative = {}
             self.performance_capture_enabled = True
+            self._last_logged_day = None
             self._perf_stage_order = tuple(self.performance_thresholds.keys())
             self._perf_stage_index = {stage: idx for idx, stage in enumerate(self._perf_stage_order)}
             
@@ -145,6 +146,11 @@ class ZacReferenceAlgorithm(QCAlgorithm):
         """Main data processing method - handles multiple symbols"""
         
         try:
+            current_day = self.Time.date() if hasattr(self, 'Time') else None
+            if current_day is not None and current_day != self._last_logged_day:
+                self.Log(f"{self.Time:%Y-%m-%d} - New trading day started")
+                self._last_logged_day = current_day
+
             limit_active = False
             if hasattr(self, 'risk_manager') and hasattr(self.risk_manager, 'CheckDailyPnLLimit'):
                 limit_active = self.risk_manager.CheckDailyPnLLimit()
