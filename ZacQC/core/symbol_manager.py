@@ -128,9 +128,6 @@ class SymbolManager:
             if not data_ready:
                 return
 
-            if self._guard_time_short_circuit(perf_enabled, total_start):
-                return
-
             # Phase 3: Update rally detector with new price data
             if hasattr(self.conditions_checker, 'update_rally_data'):
                 rally_start = time.perf_counter() if perf_enabled else None
@@ -215,33 +212,6 @@ class SymbolManager:
         except Exception as e:
             self.algorithm.Error(f"Error in OnData for {self.symbol_name}: {e}")
     
-    def _guard_time_short_circuit(self, perf_enabled, total_start):
-        """Guard-time short circuit: exit early when algo window is closed with no work outstanding."""
-        if self.conditions_checker is None:
-            return False
-
-        checker = getattr(self.conditions_checker, 'is_entry_order_enabled', None)
-        if checker is None:
-            return False
-
-        current_time = self.algorithm.Time
-
-        # Only short-circuit when entry window is closed (guard window active)
-        if checker(current_time):
-            return False
-
-        if self._has_open_positions_or_pending_orders():
-            return False
-
-        if perf_enabled and total_start is not None:
-            self.algorithm.record_performance(
-                self.symbol_name,
-                'total',
-                time.perf_counter() - total_start
-            )
-
-        return True
-
     def _has_open_positions_or_pending_orders(self):
         """Check whether any state requires running the full pipeline."""
         for strategy in self.strategies:

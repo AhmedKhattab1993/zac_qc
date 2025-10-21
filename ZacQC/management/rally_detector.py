@@ -164,12 +164,15 @@ class RallyDetector:
 
         filtered = self.filter_market_hours_data(symbol)
         metric_range_price = getattr(metrics, 'metric_range_price', None)
+        if metric_range_price is None or metric_range_price <= 0:
+            metric_range_price = self._compute_metric_range_price(filtered)
 
         if len(filtered) < 10 or not metric_range_price or metric_range_price <= 0:
             long_state['computed_time'] = latest_time
             long_state['result'] = False
             long_state['reset'] = False
             return long_state
+
         try:
             lowest_idx, lowest_sample = min(
                 enumerate(filtered),
@@ -184,10 +187,16 @@ class RallyDetector:
         lowest_price = lowest_sample.low
         lowest_time = lowest_sample.time
 
-        slice_iter = enumerate(islice(filtered, lowest_idx, None), start=lowest_idx)
+        filtered_from_low = filtered[lowest_idx:]
+        if not filtered_from_low:
+            long_state['computed_time'] = latest_time
+            long_state['result'] = False
+            long_state['reset'] = False
+            return long_state
+
         try:
-            highest_idx, highest_sample = max(
-                slice_iter,
+            highest_rel_idx, highest_sample = max(
+                enumerate(filtered_from_low),
                 key=lambda item: item[1].high
             )
         except ValueError:
@@ -198,11 +207,22 @@ class RallyDetector:
 
         highest_price = highest_sample.high
         highest_time = highest_sample.time
-        last_sample = filtered[-1]
-        last_low = last_sample.low
-        last_low_time = last_sample.time
 
-        rally_x = ((highest_price - lowest_price) * 100.0 / lowest_price) / metric_range_price
+        filtered_from_high = filtered_from_low[highest_rel_idx:]
+        if not filtered_from_high:
+            long_state['computed_time'] = latest_time
+            long_state['result'] = False
+            long_state['reset'] = False
+            return long_state
+
+        last_low_sample = filtered_from_high[-1]
+        last_low = last_low_sample.low
+        last_low_time = last_low_sample.time
+
+        if lowest_price == 0:
+            rally_x = float('inf')
+        else:
+            rally_x = ((highest_price - lowest_price) * 100.0 / lowest_price) / metric_range_price
         rally_x_condition = self._rally_x_min <= rally_x <= self._rally_x_max
 
         rally_y = abs((highest_price - last_low) * 100.0 / highest_price) / metric_range_price
@@ -241,6 +261,8 @@ class RallyDetector:
 
         filtered = self.filter_market_hours_data(symbol)
         metric_range_price = getattr(metrics, 'metric_range_price', None)
+        if metric_range_price is None or metric_range_price <= 0:
+            metric_range_price = self._compute_metric_range_price(filtered)
 
         if len(filtered) < 10 or not metric_range_price or metric_range_price <= 0:
             short_state['computed_time'] = latest_time
@@ -276,14 +298,32 @@ class RallyDetector:
 
         lowest_price = lowest_sample.low
         lowest_time = lowest_sample.time
-        last_sample = filtered[-1]
-        last_high = last_sample.high
-        last_high_time = last_sample.time
+
+        filtered_from_high = filtered[highest_idx:]
+        if not filtered_from_high:
+            short_state['computed_time'] = latest_time
+            short_state['result'] = False
+            short_state['reset'] = False
+            return short_state
+
+        filtered_from_low = filtered_from_high[lowest_idx - highest_idx:]
+        if not filtered_from_low:
+            short_state['computed_time'] = latest_time
+            short_state['result'] = False
+            short_state['reset'] = False
+            return short_state
+
+        last_high_sample = filtered_from_low[-1]
+        last_high = last_high_sample.high
+        last_high_time = last_high_sample.time
 
         rally_x = ((highest_price - lowest_price) * 100.0 / highest_price) / metric_range_price
         rally_x_condition = self._rally_x_min <= rally_x <= self._rally_x_max
 
-        rally_y = abs((last_high - lowest_price) * 100.0 / lowest_price) / metric_range_price
+        if lowest_price == 0:
+            rally_y = float('inf')
+        else:
+            rally_y = abs((last_high - lowest_price) * 100.0 / lowest_price) / metric_range_price
         rally_y_condition = rally_y >= self._rally_y_threshold
 
         time_constraint = self.validate_time_constraint_short(symbol, metrics, highest_time, last_high_time)
@@ -301,6 +341,20 @@ class RallyDetector:
             )
 
         return short_state
+
+    def _compute_metric_range_price(self, samples):
+        """Fallback calculation for metric_range_price using current session samples."""
+        if not samples:
+            return 0.0
+
+        session_open = samples[0].open
+        if session_open <= 0:
+            return 0.0
+
+        session_high = max(sample.high for sample in samples)
+        session_low = min(sample.low for sample in samples)
+
+        return ((session_high - session_low) * 100.0) / session_open
     
     def check_long_rally_condition(self, symbol, metrics):
         """
